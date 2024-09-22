@@ -48,7 +48,7 @@ jobs:
         run: sed -i 's%ApiUrlGoesHerePlease%${{ secrets.API_URL }}%' straftatonlinecup-backend/Program.cs
 
       - name: Bodge in BASE URL
-        run: sed -i 's%BaseUrlGoesHerePlease%${{ secrets.BASE }}%' straftatonlinecup-backend/Program.cs
+        run: sed -i 's%BaseUrlGoesHerePlease%${{ secrets.BASE_URL }}%' straftatonlinecup-backend/Program.cs
 
       - name: Build DotNet app
         run: mkdir -p output  && dotnet build straftatonlinecup-backend/straftatonlinecup.csproj -o output/
