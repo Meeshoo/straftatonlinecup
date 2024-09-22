@@ -5,7 +5,7 @@ source "docker" "aspnet" {
     "ENV FOO bar",
     "EXPOSE 80",
     "WORKDIR /straftatonlinecup",
-    "CMD [\"/straftatonlinecup/straftatonlinecup-backend.dll\"]",
+    "CMD [\"/straftatonlinecup/straftatonlinecup.dll\"]",
     "ENTRYPOINT [\"/usr/bin/dotnet\"]"
   ]
 }
