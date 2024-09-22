@@ -96,7 +96,8 @@ app.MapGet("/postlogin", async (HttpContext context, IDbConnection database) => 
         database.Execute($"UPDATE players SET nickname = \'{playerNickname}\', avatar_url = \'{playerAvatarUrl}\' WHERE steamid = \"{steamId}\"");
     }
 
-    return Results.Redirect(BASE_URL, true);
+    return $"<script>window.location.replace(\"{BASE_URL}\")</script>";
+
 });
 
 app.MapGet("/debug", async (context) => {
