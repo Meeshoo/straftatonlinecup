@@ -51,7 +51,7 @@ jobs:
         run: sed -i 's%BaseUrlGoesHerePlease%${{ secrets.BASE }}%' straftatonlinecup-backend/Program.cs
 
       - name: Build DotNet app
-        run: mkdir -p output  && dotnet build straftatonlinecup-backend/straftatonlinecup-backend.csproj -o output/
+        run: mkdir -p output  && dotnet build straftatonlinecup-backend/straftatonlinecup.csproj -o output/
       
       - name: Packer build
         run: cd .build && sudo packer build straftatonlinecup-backend.pkr.hcl
