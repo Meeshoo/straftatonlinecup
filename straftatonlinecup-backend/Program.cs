@@ -106,7 +106,7 @@ app.MapGet("/debug", async (context) => {
     string? steamNickname = user.Identity.Name;
 
     if (user.Identity.IsAuthenticated) {
-        await context.Response.WriteAsync($"Welcome, {steamNickname}! Your Steam ID is {steamId}");
+        await context.Response.WriteAsync($"Welcome, {steamNickname}! Your Steam ID is {steamId}. Base URL is {BASE_URL}");
     } else {
         await context.Response.WriteAsync("You are not yet logged tf in");
     }
