@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="htmx-config" content='{"withCredentials": true}'>
+    <title>Straftat Online Cup</title>
+    <link rel="shortcut icon" type="image/png" href="img/favicon.png" />
+    <link rel="stylesheet" type="text/css" href="css/site.css" />
+    <script src="pkgs/htmx.min.js" defer></script>
+</head>
+  <body>
+
+    <div class="centre" id="main_container"
+      hx-get="http://localhost:8000/debug"
+      hx-request='{"credentials": true}' 
+      hx-target="#main_container"
+      hx-swap="innerHTML"
+      hx-trigger="load">
+    </div>
+
+    <div class="centre" id="admin-stuff">
+      <h1 style="margin-top: 300px;">Admin things</h1>
+
+      <div class="centre" id="bracket">
+
+        <button
+        hx-get="http://localhost:8000/generatebracket"
+        hx-target="#bracket"
+        hx-swap="innerHTML"
+        hx-trigger="click">
+        GenerateBracket
+        </button>
+
+      </div>
+
+      <div class="centre" id="cup">
+
+        <button
+        hx-get="http://localhost:8000/createnewcup"
+        hx-target="#cup"
+        hx-swap="innerHTML"
+        hx-trigger="click">
+        Create new cup
+        </button>
+
+      </div>
+
+      <div class="centre" id="test_players">
+
+        <button
+        hx-get="http://localhost:8000/registertestplayers"
+        hx-target="#test_players"
+        hx-swap="innerHTML"
+        hx-trigger="click">
+        Add 15 test players
+        </button>
+
+      </div>
+
+    </div>
+
+  </body>
+</html>

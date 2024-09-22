@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="htmx-config" content='{"withCredentials": true}'>
+    <title>Straftat Online Cup</title>
+    <link rel="shortcut icon" type="image/png" href="img/favicon.png" />
+    <link rel="stylesheet" type="text/css" href="css/site.css" />
+    <script src="pkgs/htmx.min.js" defer></script>
+</head>
+  <body>
+
+    <div id="top_bar" style="display: flex; width: 100%; height: 5rem;background-color: red;">
+      <a href="index.html"><h1>STRAFTAT ONLINE CUP</h1></a>
+      <a href="bracket.html" class="top_bar_button">Bracket</a>
+      <a href="match.html" class="top_bar_button">Match</a>
+      <a href="profile.html" class="top_bar_button">Profile</a>
+      <div style="height: 100%; float: right;">
+        <a href="http://localhost:8000/login"><img style="margin-top: 12%;" src="img/SteamSignin.png"></a>
+      </div>
+    </div>
+
+    <div class="centre" id="main_container"
+      hx-get="http://localhost:8000/debug"
+      hx-request='{"credentials": true}' 
+      hx-target="#main_container"
+      hx-swap="innerHTML"
+      hx-trigger="load">
+    </div>
+
+    <div class="centre" id="register">
+
+      <button
+      hx-get="http://localhost:8000/register"
+      hx-target="#register"
+      hx-swap="innerHTML"
+      hx-trigger="click">
+      Register for cup
+      </button>
+
+    </div>
+
+  </body>
+</html>
