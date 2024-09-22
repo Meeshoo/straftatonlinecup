@@ -3,7 +3,6 @@ source "docker" "nginx" {
   commit = true
   changes = [
     "ENV FOO bar",
-    
   ]
 }
 
@@ -13,6 +12,11 @@ build {
   provisioner "file" {
     source = "../straftatonlinecup-frontend/"
     destination = "/usr/share/nginx/html"
+  }
+
+  provisioner "file" {
+    source = "nginx.conf"
+    destination = "/etc/nginx/conf.d/default.conf"
   }
 
   post-processors {
