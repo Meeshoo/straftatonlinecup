@@ -207,7 +207,7 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
         string bracketTitle = $"Cup #{completeCupId} - {completeCupDate}";
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database));
     } else {
-        await context.Response.WriteAsync("No previous cups completed");
+        await context.Response.WriteAsync("<h3 class=\"centre\">No previous cups completed</h3>");
     }
 
 });
@@ -326,7 +326,7 @@ app.MapGet("/match", async (HttpContext context, IDbConnection database) => {
     string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
 
     if (!user.Identity.IsAuthenticated) {
-        await context.Response.WriteAsync("You are not logged in. Please log in via steam to view your matches");
+        await context.Response.WriteAsync("<h3 class=\"centre\">You are not logged in. Please log in via steam to view your matches</h3>");
     } else {
 
         string uuid = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE (status = \"pending\" OR status= \"waiting_p1\" OR status= \"waiting_p2\") AND ((player_one_steamid = {steamId}))").FirstOrDefault("none");
