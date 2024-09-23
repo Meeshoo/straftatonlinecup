@@ -100,6 +100,20 @@ app.MapGet("/postlogin", async (HttpContext context, IDbConnection database) => 
 
 });
 
+app.MapGet("/headerprofile", (HttpContext context, IDbConnection database) => {
+
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+
+    if (user.Identity.IsAuthenticated) {
+        string? steamNickname = user.Identity.Name;
+        string avatarUrl = database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault("img/no_avatar.jpg");
+        return headerProfileTemplate(steamNickname, avatarUrl);
+    } else {
+        return $"<a href=\"{API_URL}/login\"><img style=\"margin-top: 12%;\" src=\"img/SteamSignin.png\"></a>";
+    }
+});
+
 app.MapGet("/debug", async (context) => {
 
     var user = context.User;
@@ -538,6 +552,16 @@ static string profileTemplate(string profileName, string avatarUrl, int wincount
         <img src=""{avatarUrl}"">
         <p>Match wins: {wincount}</p>
     </div>";
+}
+
+static string headerProfileTemplate(string profileName, string avatarUrl) {
+    return @$"
+    <a href=profile.html>
+    <div id=""header_profile"">
+        <img class=""centre"" id=""header_profile_image"" src=""{avatarUrl}"">
+        <p class=""centre"" id=""header_profile_name"">{profileName}</p>
+    </div>
+    </a>";
 }
 
 static string noMatchTemplate(string API_URL) {

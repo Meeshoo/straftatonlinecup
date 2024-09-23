@@ -1,22 +1,67 @@
+@font-face {
+  font-family: 'Robot';
+  src: url("../font/robot.woff2") format('woff2');
+}
+
 h1 {
     font-weight: 48;
 }
 
+a:hover, a:visited, a:link, a:active {
+    text-decoration: none;
+}
+
 .centre {
     text-align: center;
-  }
+}
 
-/* TOP BAR */
+/* HEADER */
 
-.top_bar_button {
+#header {
+  display: flex;
+  width: 100%;
+  height: 5rem;
+  background-color: red;
+}
+
+#site_name {
+  font-family: 'Robot';
+  text-decoration: none;
+  margin-left: 1.5rem;
+}
+
+#header_buttons {
+  margin-left: 10rem;
+}
+
+.header_button {
     margin: 1rem;
-    padding: 1px 6px;
+    padding: 0.5rem;
     border: 1px outset buttonborder;
     border-radius: 3px;
     color: white;
     background-color: rebeccapurple;
     text-decoration: none;
     align-content: center;
+    float: left;
+}
+
+#header_login {
+  height: 100%;
+  margin-top: 0.4rem;
+  margin-left: auto;
+  margin-right: 2rem;
+  float: right;
+  text-decoration: none;
+}
+
+#header_profile_name {
+  font-size: 12pt;
+  margin: 0;
+}
+
+#header_profile_image {
+  height: 50px;
 }
 
 .helper {
