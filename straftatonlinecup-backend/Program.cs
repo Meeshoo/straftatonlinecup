@@ -238,7 +238,9 @@ app.MapGet("/createnewcup", (IDbConnection database) => {
 
 app.MapGet("/register", (HttpContext context, IDbConnection database) => {
 
-    string? steamId = context.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+    var user = context.User;
+
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
     int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
 
     IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
@@ -248,6 +250,8 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
         return "Bracket is full, sorry, return next week but earlier";
     } else if (currentCupId == -1) {
         return "No cups open for registration at this present time";
+    } else if (!user.Identity.IsAuthenticated) {
+        return "Please log in to register";
     } else {
 
         IEnumerable<string> playersInPool = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
@@ -260,11 +264,11 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
                 player_steamid = steamId
             });
 
-            return "Registered";
+            return "Registered, please wait for your match to show on the match page";
 
         } else {
             return "You are already registered friend";
-        }
+        } 
     }
 });
 
