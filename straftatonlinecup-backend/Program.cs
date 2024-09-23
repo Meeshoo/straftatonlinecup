@@ -155,9 +155,9 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
         List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
 
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
+    } else {
+        await context.Response.WriteAsync("No cups, ever");
     }
-
-    await context.Response.WriteAsync("No cups, ever");
 
 });
 
