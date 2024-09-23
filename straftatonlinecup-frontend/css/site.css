@@ -80,6 +80,7 @@ a:hover, a:visited, a:link, a:active {
   background-color: aqua;
   border-radius: 7px;
   vertical-align: middle;
+  align-content: center;
 }
 
 /* Bracket */
