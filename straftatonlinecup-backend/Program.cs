@@ -189,23 +189,25 @@ app.MapGet("/getpreviouscup", async (HttpContext context, IDbConnection database
 
 });
 
-// TODO: Make this actually get last 5 cups, currently just gets one
 app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection database) => {
 
-    int completeCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
+    IEnumerable<int> completeCupIds = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 5").DefaultIfEmpty(-1);
 
-    if (completeCupId != -1) {
-        string completeCupDate = database.Query<string>($"SELECT [date] FROM [cups] WHERE id = \"{completeCupId}\"").First();
-        string cupWinnerName = "";
-        string cupWinnerAvatarUrl = "";
-        string cupWinnerSteamId = database.Query<string>($"SELECT [winner_steamid] FROM [cups] WHERE (id = {completeCupId}) LIMIT 1").FirstOrDefault("");
-        if (cupWinnerSteamId != "") {
-            cupWinnerName = steamIdToNickname(cupWinnerSteamId, database);
-            cupWinnerAvatarUrl = steamIdToAvatar(cupWinnerSteamId, database);
+    string response = "";
+
+    if (completeCupIds.ElementAt(0) != -1) {
+        foreach (var cupId in completeCupIds) {
+            string completeCupDate = database.Query<string>($"SELECT [date] FROM [cups] WHERE id = \"{cupId}\"").First();
+            string cupWinnerSteamId = database.Query<string>($"SELECT [winner_steamid] FROM [cups] WHERE (id = {cupId}) LIMIT 1").FirstOrDefault("");
+            string cupWinnerName = steamIdToNickname(cupWinnerSteamId, database);
+            string cupWinnerAvatarUrl = steamIdToAvatar(cupWinnerSteamId, database);
+
+            List<string> playersInBracket = getPlayersInBracket(cupId, bracketSize, database);
+
+            string bracketTitle = $"Cup #{cupId} - {completeCupDate}";
+            response += bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database);
         }
-        List<string> playersInBracket = getPlayersInBracket(completeCupId, bracketSize, database);
-        string bracketTitle = $"Cup #{completeCupId} - {completeCupDate}";
-        await context.Response.WriteAsync(bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database));
+        await context.Response.WriteAsync(response);
     } else {
         await context.Response.WriteAsync("<h3 class=\"centre\">No previous cups completed</h3>");
     }
