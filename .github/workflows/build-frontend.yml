@@ -44,7 +44,7 @@ jobs:
       - name: Bodge in API URL
         run: |
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/index.html
-          sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/bracket.html
+          sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/cups.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/match.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/profile.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/postlogin.html

@@ -13,6 +13,7 @@ a:hover, a:visited, a:link, a:active {
 
 .centre {
     text-align: center;
+    margin: auto;
 }
 
 /* HEADER */
@@ -70,10 +71,22 @@ a:hover, a:visited, a:link, a:active {
     vertical-align: middle;
 }
 
+/* HOME PAGE */
+
+#more_cups_container {
+  width: 80%;
+  height: 10rem;
+  margin-top: 2rem;
+  background-color: aqua;
+  border-radius: 7px;
+  vertical-align: middle;
+}
+
 /* Bracket */
 
 #bracket {
-  display: inline-flex;
+  display: inline-grid;
+  margin-top: 2rem;
 }
 
 #bracket_winner_wrapper {

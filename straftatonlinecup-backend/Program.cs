@@ -6,7 +6,7 @@ using System.Data;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.WebEncoders.Testing;
+using Microsoft.Extensions.Primitives;
 
 string steamApiKey = "PutSteamKeyHerePlease";
 string API_URL = "ApiUrlGoesHerePlease";
@@ -17,8 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors();
 builder.Services.AddScoped<IDbConnection>(_ => new SqliteConnection(builder.Configuration.GetConnectionString("Database")));
-builder.Services.AddAuthentication(options =>
-{
+builder.Services.AddAuthentication(options => {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = "Steam";
 })
@@ -26,8 +25,7 @@ builder.Services.AddAuthentication(options =>
             options.Cookie.SameSite = SameSiteMode.None;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         })
-.AddSteam(options =>
-{
+.AddSteam(options => {
     options.ApplicationKey = steamApiKey;
     options.CallbackPath = "/signin";
 });
@@ -82,18 +80,17 @@ app.MapGet("/postlogin", async (HttpContext context, IDbConnection database) => 
     var jsonResponse = await response.Content.ReadAsStringAsync();
     JObject steamData = JObject.Parse(jsonResponse);
 
-    string playerNickname = (string)steamData["response"]["players"][0]["personaname"];
     playerAvatarUrl = (string)steamData["response"]["players"][0]["avatarfull"];
 
     if (existingUser == "none") {
         database.Execute("INSERT INTO [players] VALUES(@steamid, @nickname, @avatar_url)", new
         {
             steamid = steamId,
-            nickname = playerNickname,
+            nickname = steamNickname,
             avatar_url = playerAvatarUrl
         });
     } else {
-        database.Execute($"UPDATE players SET nickname = \'{playerNickname}\', avatar_url = \'{playerAvatarUrl}\' WHERE steamid = \"{steamId}\"");
+        database.Execute($"UPDATE players SET nickname = \'{steamNickname}\', avatar_url = \'{playerAvatarUrl}\' WHERE steamid = \"{steamId}\"");
     }
 
     return $"<script>window.location.replace(\"{BASE_URL}\")</script>";
@@ -145,41 +142,73 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
 
 });
 
-app.MapGet("/bracket", async (HttpContext context, IDbConnection database) => {
+app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database) => {
 
-    string date = DateTime.Today.ToString("yyyy-MM-dd");
+    string currentCupStatus = database.Query<string>($"SELECT [status] FROM [cups] ORDER BY id DESC LIMIT 1").FirstOrDefault("");
 
-    // TODO: Refactor this to make less calls
-    // database.Query<string>($"SELECT [player_one_steamid],[player_two_steamid] FROM [matches] WHERE (cup_id = {currentCupId}) ORDER BY match_number ASC");
-    // THEN PUT THOSE DATAS IN TO A LIST
-    int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"ongoing\") OR (status = \"complete\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
+    if (currentCupStatus == "open") {
+        int currentOpenCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") ORDER BY id DESC LIMIT 1").First();
+        await context.Response.WriteAsync(openCupTemplate(API_URL, currentOpenCupId));
+    } else if (currentCupStatus == "ongoing") {
+        
+        int currentOngoingCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"ongoing\") ORDER BY id DESC LIMIT 1").First();
+        List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
 
-    if (currentCupId == -1) {
-        await context.Response.WriteAsync("No cups at all");
+        await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
     }
 
-    List<string> playersInBracket = [];
+    await context.Response.WriteAsync("No cups, ever");
 
-    for (int i = 0; i < 16; i++) {
+});
 
-        string playerOneSteamId = database.Query<string>($"SELECT [player_one_steamid] FROM [matches] WHERE (match_number = {i}) AND (cup_id = {currentCupId})").FirstOrDefault("");
-        playersInBracket.Add(steamIdToNickname(playerOneSteamId, database));
-        string playerTwoSteamId = database.Query<string>($"SELECT [player_two_steamid] FROM [matches] WHERE (match_number = {i}) AND (cup_id = {currentCupId})").FirstOrDefault("");
-        playersInBracket.Add(steamIdToNickname(playerTwoSteamId, database));
+app.MapGet("/getpreviouscup", async (HttpContext context, IDbConnection database) => {
 
+    int currentOpenCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
+    if (currentOpenCupId == -1) {
+        await context.Response.WriteAsync("");
+        return;
     }
 
-    string cupWinnerName = "";
-    string cupWinnerAvatarUrl = "";
+    int completeCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
 
-    string cupStatus = database.Query<string>($"SELECT [status] FROM [cups] WHERE (id = {currentCupId}) LIMIT 1").First();
-    string cupWinnerSteamId = database.Query<string>($"SELECT [winner_steamid] FROM [cups] WHERE (id = {currentCupId}) LIMIT 1").FirstOrDefault("");
-    if (cupWinnerSteamId != "") {
-        cupWinnerName = steamIdToNickname(cupWinnerSteamId, database);
-        cupWinnerAvatarUrl = steamIdToAvatar(cupWinnerSteamId, database);
+    if (completeCupId != -1) {
+        string completeCupDate = database.Query<string>($"SELECT [date] FROM [cups] WHERE id = \"{completeCupId}\"").First();
+        string cupWinnerName = "";
+        string cupWinnerAvatarUrl = "";
+        string cupWinnerSteamId = database.Query<string>($"SELECT [winner_steamid] FROM [cups] WHERE (id = {completeCupId}) LIMIT 1").FirstOrDefault("");
+        if (cupWinnerSteamId != "") {
+            cupWinnerName = steamIdToNickname(cupWinnerSteamId, database);
+            cupWinnerAvatarUrl = steamIdToAvatar(cupWinnerSteamId, database);
+        }
+        List<string> playersInBracket = getPlayersInBracket(completeCupId, bracketSize, database);
+        string bracketTitle = $"Cup #{completeCupId} - {completeCupDate}";
+        await context.Response.WriteAsync(bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database));
+    } else {
+        await context.Response.WriteAsync("");
     }
 
-    await context.Response.WriteAsync(bracketTemplate(playersInBracket, cupStatus, cupWinnerName, cupWinnerAvatarUrl, database));
+});
+
+// TODO: Make this actually get last 5 cups, currently just gets one
+app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection database) => {
+
+    int completeCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
+
+    if (completeCupId != -1) {
+        string completeCupDate = database.Query<string>($"SELECT [date] FROM [cups] WHERE id = \"{completeCupId}\"").First();
+        string cupWinnerName = "";
+        string cupWinnerAvatarUrl = "";
+        string cupWinnerSteamId = database.Query<string>($"SELECT [winner_steamid] FROM [cups] WHERE (id = {completeCupId}) LIMIT 1").FirstOrDefault("");
+        if (cupWinnerSteamId != "") {
+            cupWinnerName = steamIdToNickname(cupWinnerSteamId, database);
+            cupWinnerAvatarUrl = steamIdToAvatar(cupWinnerSteamId, database);
+        }
+        List<string> playersInBracket = getPlayersInBracket(completeCupId, bracketSize, database);
+        string bracketTitle = $"Cup #{completeCupId} - {completeCupDate}";
+        await context.Response.WriteAsync(bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database));
+    } else {
+        await context.Response.WriteAsync("No previous cups completed");
+    }
 
 });
 
@@ -237,26 +266,6 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
             return "You are already registered friend";
         }
     }
-});
-
-app.MapGet("/registertestplayers", (IDbConnection database) => {
-    List<string> testPlayers = [
-    "76561198023456789",
-    "76561197987654321",
-    "76561198034567890"
-    ];
-
-    int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
-
-    foreach (var testPlayer in testPlayers) {
-    database.Execute("INSERT INTO [cup_player_lists] VALUES(@cup_id, @player_steamid)", new
-    {
-        cup_id = currentCupId,
-        player_steamid = testPlayer
-    });
-    }
-    return "Test players added";
-
 });
 
 app.MapGet("/generatebracket", (IDbConnection database) => {
@@ -545,6 +554,25 @@ static string steamIdToAvatar(string steamId, IDbConnection database) {
     }
 }
 
+static List<string> getPlayersInBracket(int cupId, int bracketSize, IDbConnection database) {
+        
+        List<string> playersInBracket = [];
+
+        // TODO: Refactor this to make less calls
+        // database.Query<string>($"SELECT [player_one_steamid],[player_two_steamid] FROM [matches] WHERE (cup_id = {currentCupId}) ORDER BY match_number ASC");
+        // THEN PUT THOSE DATAS IN TO A LIST
+        for (int i = 0; i < bracketSize; i++) {
+
+            string playerOneSteamId = database.Query<string>($"SELECT [player_one_steamid] FROM [matches] WHERE (match_number = {i}) AND (cup_id = {cupId})").FirstOrDefault("");
+            playersInBracket.Add(steamIdToNickname(playerOneSteamId, database));
+            string playerTwoSteamId = database.Query<string>($"SELECT [player_two_steamid] FROM [matches] WHERE (match_number = {i}) AND (cup_id = {cupId})").FirstOrDefault("");
+            playersInBracket.Add(steamIdToNickname(playerTwoSteamId, database));
+
+        }
+
+        return playersInBracket;
+}
+
 static string profileTemplate(string profileName, string avatarUrl, int wincount) {
     return @$"
     <div class=""centre"">
@@ -666,10 +694,28 @@ static string resultConfirmationTemplate(string API_URL, string declaredResult) 
     ";
 }
 
-static string bracketTemplate(List<string> playersInBracket, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
+static string openCupTemplate(string API_URL, int currentOpenCupId) {
+    return @$"
+        <h3>Cup #{currentOpenCupId} is open for registration</h3>
+        <div class=""centre"" id=""register"">
+
+            <button
+            hx-get=""{API_URL}/register""
+            hx-target=""#register""
+            hx-swap=""innerHTML""
+            hx-trigger=""click"">
+            Register for cup
+            </button>
+
+        </div>
+    ";
+}
+
+static string bracketTemplate(List<string> playersInBracket, string bracketTitle, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
     
     string response = @$"
     <div class=""centre"" id=""bracket"">
+    <h3>{bracketTitle}</h3>
     <div class=""playoff-table"">
     <div class=""playoff-table-content"">
         <div class=""playoff-table-tour"">

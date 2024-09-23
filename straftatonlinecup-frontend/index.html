@@ -14,8 +14,9 @@
     <div id="header"">
       <a href="/"><h1 id="site_name">STRAFTAT ONLINE CUP</h1></a>
       <div id="header_buttons">
-        <a href="bracket.html" class="header_button">Bracket</a>
         <a href="match.html" class="header_button">Match</a>
+        <a href="cups.html" class="header_button">Past Cups</a>
+        <a href="info.html" class="header_button">About</a>
       </div>
       <div id="header_login"
         hx-get="http://localhost:8000/headerprofile"
@@ -26,25 +27,27 @@
       </div>
     </div>
 
-    <div class="centre" id="main_container"
-      hx-get="http://localhost:8000/debug"
+    <div class="centre" id="open_cup_container"
+      hx-get="http://localhost:8000/getcurrentcup"
       hx-request='{"credentials": true}' 
-      hx-target="#main_container"
+      hx-target="#open_cup_container"
       hx-swap="innerHTML"
       hx-trigger="load">
     </div>
 
-    <div class="centre" id="register">
-
-      <button
-      hx-get="http://localhost:8000/register"
-      hx-target="#register"
+    <div class="centre" id="last_cup_container"
+      hx-get="http://localhost:8000/getpreviouscup"
+      hx-request='{"credentials": true}' 
+      hx-target="#last_cup_container"
       hx-swap="innerHTML"
-      hx-trigger="click">
-      Register for cup
-      </button>
-
+      hx-trigger="load">
     </div>
+
+    <a class="centre" href="cups.html">
+    <div class="centre" id="more_cups_container">
+      <h2>See all previous cups</h2>
+    </div>
+    </a>
 
   </body>
 </html>
