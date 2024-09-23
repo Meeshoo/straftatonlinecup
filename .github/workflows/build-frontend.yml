@@ -49,7 +49,6 @@ jobs:
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/profile.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/postlogin.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/info.html
-          sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/admin.html
       
       - name: Packer build
         run: cd .build && sudo packer build straftatonlinecup-frontend.pkr.hcl
