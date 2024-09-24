@@ -133,7 +133,7 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
 
     if (user.Identity.IsAuthenticated) {
         string avatarUrl = database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault("img/no_avatar.jpg");
-        int wincount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE (winner_steamid = {steamId})").Count();
+        int wincount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE winner_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
 
         await context.Response.WriteAsync(profileTemplate(steamNickname, avatarUrl, wincount));
     } else {
