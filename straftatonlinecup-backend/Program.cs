@@ -489,7 +489,7 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
     }
     
 
-    Guid UUID = Guid.NewGuid();
+    Guid uuid = Guid.NewGuid();
     string date = DateTime.Today.ToString("yyyy-MM-dd");
     string winner;
     string status;
@@ -507,34 +507,34 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
     }
 
     Match match = new() {
-        UUID = UUID,
+        uuid = uuid,
         date = date,
-        cupID = currentCupId,
-        matchNumber = matchNumber,
+        cup_id = currentCupId,
+        match_number = matchNumber,
         status = status,
-        playerOneSteamID = playerOneSteamID,
-        playerTwoSteamID = playerTwoSteamID,
-        playerOneDeclaredResult = "",
-        playerTwoDeclaredResult = "",
-        winnerSteamID = winner,
+        player_one_steamid = playerOneSteamID,
+        player_two_steamid = playerTwoSteamID,
+        player_one_declared_result = "",
+        player_two_declared_result = "",
+        winner_steamid = winner,
         score = "",
-        sharedWord = randomword.getRandomWord()
+        shared_word = randomword.getRandomWord()
     };
 
     database.Execute("INSERT INTO [matches] VALUES(@uuid, @date, @cup_id, @match_number, @status, @player_one_steamid, @player_two_steamid, @winner_steamid, @player_one_declared_result, @player_two_declared_result, @score, @shared_word)", new
     {
-        uuid = match.UUID,
-        date = match.date,
-        cup_id = match.cupID,
-        match_number = match.matchNumber,
-        status = match.status,
-        player_one_steamid = match.playerOneSteamID,
-        player_two_steamid = match.playerTwoSteamID,
-        player_one_declared_result = match.playerOneDeclaredResult,
-        player_two_declared_result = match.playerTwoDeclaredResult,
-        winner_steamid = match.winnerSteamID,
-        score = match.score,
-        shared_word = match.sharedWord
+        match.uuid,
+        match.date,
+        match.cup_id,
+        match.match_number,
+        match.status,
+        match.player_one_steamid,
+        match.player_two_steamid,
+        match.player_one_declared_result,
+        match.player_two_declared_result,
+        match.winner_steamid,
+        match.score,
+        match.shared_word
     });
 
     return true;
@@ -830,18 +830,18 @@ return response;
 app.Run();
 
 public struct Match { 
-    public Guid UUID;
+    public Guid uuid;
     public string date;
-    public int cupID;
-    public int matchNumber;
+    public int cup_id;
+    public int match_number;
     public string status;
-    public string playerOneSteamID;
-    public string playerTwoSteamID;
-    public string playerOneDeclaredResult;
-    public string playerTwoDeclaredResult;
-    public string winnerSteamID;
+    public string player_one_steamid;
+    public string player_two_steamid;
+    public string player_one_declared_result;
+    public string player_two_declared_result;
+    public string winner_steamid;
     public string score;
-    public string sharedWord;
+    public string shared_word;
 }
 
 // TABLES I WILL NEED WITH WHAT DATA
