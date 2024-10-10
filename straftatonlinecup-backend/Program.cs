@@ -117,6 +117,9 @@ app.MapGet("/debug", async (context) => {
     string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
     string? steamNickname = user.Identity.Name;
 
+    var remoteIp = context.Connection.RemoteIpAddress;
+    await context.Response.WriteAsync(remoteIp.ToString());
+
     if (user.Identity.IsAuthenticated) {
         await context.Response.WriteAsync($"Welcome, {steamNickname}! Your Steam ID is {steamId}.");
     } else {
@@ -215,7 +218,11 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
 });
 
 // TODO: Limit endpoint to localhost
-app.MapGet("/createnewcup", (IDbConnection database) => {
+app.MapGet("/createnewcup", (HttpContext context, IDbConnection database) => {
+
+    var remoteIp = context.Connection.RemoteIpAddress;
+
+    Console.WriteLine(remoteIp);
 
     string dateOfCup = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd");
 
