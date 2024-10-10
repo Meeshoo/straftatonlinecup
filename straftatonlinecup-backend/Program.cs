@@ -214,6 +214,7 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
 
 });
 
+// TODO: Limit endpoint to localhost
 app.MapGet("/createnewcup", (IDbConnection database) => {
 
     string dateOfCup = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd");
@@ -274,6 +275,7 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
     }
 });
 
+// TODO: Limit endpoint to localhost
 app.MapGet("/generatebracket", (IDbConnection database) => {
 
         int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
@@ -590,7 +592,7 @@ static string profileTemplate(string profileName, string avatarUrl, int wincount
 
 static string headerProfileTemplate(string profileName, string avatarUrl) {
     return @$"
-    <a href=profile.html>
+    <a class=""centre"" href=profile.html>
     <div id=""header_profile"">
         <img class=""centre"" id=""header_profile_image"" src=""{avatarUrl}"">
         <p class=""centre"" id=""header_profile_name"">{profileName}</p>
@@ -630,13 +632,15 @@ static string openMatchHostTemplate(string API_URL, string uuid, string opponent
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <h3>Your opponent is:</h3>
+        <p>Your opponent is:</p>
         <img src=""{opponentAvatar}"">
-        <p>{opponentName}</p>
-        <p>Please host a public lobby and wait for {opponentName} to join. You'll know it is actually them as they will type the codeword '{sharedword}' in the chat</p>
+        <h3>{opponentName}</h3>
+        <p>Please host a public lobby and wait for {opponentName} to join. You'll know it is actually them as they will type the codeword '{sharedword}' in the chat.</p>
+        <br>
+        <p>If you are unsure of the game settings to choose for the lobby you can find them <a href=""info.html"">here</a>.</p>
         <br>
         <div id=""result_submission"">
-            <p>Once complete, submit the result below</p>
+            <p>Once complete, submit the result below:</p>
             <button 
             style=""background-color: green;""
             hx-get=""{API_URL}/resultverification?result=winner""
@@ -659,13 +663,13 @@ static string openMatchClientTemplate(string API_URL, string uuid, string oppone
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <h3>Your opponent is:</h3>
+        <p>Your opponent is:</p>
         <img src=""{opponentAvatar}"">
         <p>{opponentName}</p>
-        <p> {opponentName} will host a public lobby. Please join it and type the codeword '{sharedword}' to confirm to them that you are the right person </p>
+        <p> {opponentName} will host a public lobby. Please join it and type the codeword '{sharedword}' to confirm to them that you are the right person.</p>
         <br>
         <div id=""result_submission"">
-            <p>Once complete, submit the result below</p>
+            <p>Once complete, submit the result below:</p>
             <button 
             style=""background-color: green;""
             hx-get=""{API_URL}/resultverification?result=winner""
@@ -720,8 +724,9 @@ static string openCupTemplate(string API_URL, int currentOpenCupId) {
 static string bracketTemplate(List<string> playersInBracket, string bracketTitle, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
     
     string response = @$"
-    <div class=""centre"" id=""bracket"">
+    <div class=""centre bracket_wrapper"">
     <h3>{bracketTitle}</h3>
+    <div class=""bracket"">
     <div class=""playoff-table"">
     <div class=""playoff-table-content"">
         <div class=""playoff-table-tour"">
@@ -809,7 +814,6 @@ static string bracketTemplate(List<string> playersInBracket, string bracketTitle
             </div>
         </div>
     </div>
-</div>
 </div>";
 
 if (cupStatus == "complete") {
@@ -821,10 +825,14 @@ if (cupStatus == "complete") {
     <p>{cupWinnerName}</p>
     </div>
     </div>
+    </div>
+    </div>
     ";
+} else {
+    response += "</div></div>";
 }
-return response;
 
+return response;
 }
 
 app.Run();

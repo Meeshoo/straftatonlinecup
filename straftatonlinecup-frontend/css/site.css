@@ -1,10 +1,50 @@
+/* :root {
+  --background-colour: #232914;
+  --main-colour: #46b975;
+  --test-colour: #63fded;
+} */
+
+:root {
+  --background-colour: #14170e;
+  --main-colour: #6df2d1;
+  /* --second-colour: #548687; */
+  /* --second-colour: #654F6F; */
+  --second-colour: #242919;
+  --test-colour: #63fded;
+}
+
 @font-face {
   font-family: 'Robot';
   src: url("../font/robot.woff2") format('woff2');
 }
 
+* {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+  background-color: var(--background-colour);
+}
+
+p {
+  font-family: 'Courier New';
+  color: var(--main-colour);
+}
+
 h1 {
-    font-weight: 48;
+  font-family: 'Robot';
+  font-weight: 48;
+  color: var(--main-colour);
+}
+
+h2 {
+  font-family: 'Robot';
+  color: var(--main-colour);
+}
+
+h3 {
+  font-family: 'Robot';
+  color: var(--main-colour);
 }
 
 a:hover, a:visited, a:link, a:active {
@@ -22,7 +62,7 @@ a:hover, a:visited, a:link, a:active {
   display: flex;
   width: 100%;
   height: 5rem;
-  background-color: red;
+  background-color: var(--background-colour);
 }
 
 #site_name {
@@ -36,15 +76,18 @@ a:hover, a:visited, a:link, a:active {
 }
 
 .header_button {
-    margin: 1rem;
-    padding: 0.5rem;
-    border: 1px outset buttonborder;
-    border-radius: 3px;
-    color: white;
-    background-color: rebeccapurple;
-    text-decoration: none;
-    align-content: center;
-    float: left;
+  font-family: 'Robot';
+  font-size: 18px;
+  margin: 1rem;
+  padding: 0.5rem;
+  border: 2px outset buttonborder;
+  border-radius: 3px;
+  border-color: var(--main-colour);
+  color: var(--main-colour);
+  background-color: var(--background-colour);
+  text-decoration: none;
+  align-content: center;
+  float: left;
 }
 
 #header_login {
@@ -77,7 +120,9 @@ a:hover, a:visited, a:link, a:active {
   width: 80%;
   height: 10rem;
   margin-top: 2rem;
-  background-color: aqua;
+  background-color: var(--background-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
   border-radius: 7px;
   vertical-align: middle;
   align-content: center;
@@ -92,14 +137,22 @@ a:hover, a:visited, a:link, a:active {
 
 /* Bracket */
 
-#bracket {
+.bracket_wrapper {
   display: inline-grid;
   margin-top: 2rem;
+  background-color: var(--second-colour);
+  padding: 2rem;
+  border-radius: 0.2rem;
+}
+
+.bracket {
+  display: flex;
 }
 
 #bracket_winner_wrapper {
   display: inline-flex;
   height: auto;
+  margin-left: 1rem;
 }
 
 #bracket_winner {
@@ -118,7 +171,7 @@ a:hover, a:visited, a:link, a:active {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    background-color: #f5f5f5;
+    background-color: var(--main-colour);
   }
   .playoff-table .playoff-table-content {
     display: -webkit-flex;
@@ -153,14 +206,14 @@ a:hover, a:visited, a:link, a:active {
     right: -12px;
     width: 12px;
     height: 1px;
-    background-color: red;
+    background-color: var(--second-colour);
   }
   .playoff-table .playoff-table-pair:after {
     content: '';
     position: absolute;
     width: 3px;
     height: 1000px;
-    background-color: #f5f5f5;
+    background-color: var(--main-colour);
     right: -12px;
     z-index: 1;
   }
@@ -171,7 +224,7 @@ a:hover, a:visited, a:link, a:active {
     bottom: 28px;
   }
   .playoff-table .playoff-table-pair-style {
-    border: 1px solid #cccccc;
+    border: 1px solid var(--second-colour);
     background-color: white;
     width: 160px;
     margin-bottom: 20px;
@@ -207,7 +260,7 @@ a:hover, a:visited, a:link, a:active {
     bottom: 29px;
     right: 0px;
     width: 1px;
-    background-color: red;
+    background-color: var(--second-colour);
   }
   .playoff-table .playoff-table-group:last-child {
     margin-bottom: 0;
@@ -218,7 +271,7 @@ a:hover, a:visited, a:link, a:active {
     padding: 3px 5px;
   }
   .playoff-table .playoff-table-left-player {
-    border-bottom: 1px solid #cccccc;
+    border-bottom: 1px solid var(--second-colour);
   }
   .playoff-table .playoff-table-left-player:before {
     content: '';
@@ -227,11 +280,11 @@ a:hover, a:visited, a:link, a:active {
     left: -12px;
     width: 12px;
     height: 1px;
-    background-color: red;
+    background-color: var(--second-colour);
   }
   .playoff-table .playoff-table-right-player {
     margin-top: -1px;
-    border-top: 1px solid #cccccc;
+    border-top: 1px solid var(--second-colour);
   }
   .playoff-table .playoff-table-third-place {
     position: absolute;
