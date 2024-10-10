@@ -257,11 +257,11 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
     int numberOfRegisteredPlayers = registeredPlayers.Count();
 
     if ( numberOfRegisteredPlayers >= bracketSize) {
-        return "Bracket is full, sorry, return next week but earlier";
+        return "<p>Bracket is full, sorry, return next week but earlier</p>";
     } else if (currentCupId == -1) {
-        return "No cups open for registration at this present time";
+        return "<p>No cups open for registration at this present time<p>/";
     } else if (!user.Identity.IsAuthenticated) {
-        return "Please log in to register";
+        return "<p>Please log in to register</p>";
     } else {
 
         IEnumerable<string> playersInPool = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
@@ -274,10 +274,10 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
                 player_steamid = steamId
             });
 
-            return "Registered, please wait for your match to show on the match page";
+            return "<p>Registered, please wait for your match to show on the match page</p>";
 
         } else {
-            return "You are already registered friend";
+            return "<p>You are already registered friend</p>";
         } 
     }
 });
@@ -444,7 +444,7 @@ app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, Ht
                 string winnerOfRightLeg = database.Query<string>($"SELECT [winner_steamid] FROM [matches] WHERE match_number = {route[1]} AND cup_id = {currentCupId}").First();
                 generateMatch(route[2], winnerOfLeftLeg, winnerOfRightLeg, database);
             } else {
-                return "Awaiting result of other match";
+                return "<p>Awaiting result of other match</p>";
             }
         } else if (matchNumber == route[1] && database.Query<string>($"SELECT [status] FROM [matches] WHERE match_number = {route[1]} AND cup_id = {currentCupId}").First() == "complete") {
             if (database.Query<string>($"SELECT [status] FROM [matches] WHERE match_number = {route[0]} AND cup_id = {currentCupId}").First() == "complete") {
@@ -452,7 +452,7 @@ app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, Ht
                 string winnerOfRightLeg = database.Query<string>($"SELECT [winner_steamid] FROM [matches] WHERE match_number = \'{route[1]}\' AND cup_id = {currentCupId}").First();
                 generateMatch(route[2], winnerOfLeftLeg, winnerOfRightLeg, database);
             } else {
-                return "Awaiting result of other match";
+                return "<p>Awaiting result of other match</p>";
             }
         }
         // CHECK REST OF BRACKET ROUTE HERE
@@ -563,7 +563,7 @@ static string steamIdToAvatar(string steamId, IDbConnection database) {
     if (steamId == "") {
         return "";
     } else if (steamId == "FORFEIT" || steamId == "NO_OPPONENT") {
-        return "SOMEURLHERE";
+        return "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
     } else {
     return database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE steamid = \'{steamId}\'").First();
     }
@@ -615,7 +615,7 @@ static string noMatchTemplate(string API_URL) {
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <h3>You currently have no match to play. This page will update once a match is available, no need to refresh</h3>
+        <p>You currently have no match to play. This page will update once a match is available, no need to refresh.</p>
     </div>";
 }
 
@@ -627,7 +627,7 @@ static string waitingForMatchResultTemplate(string API_URL) {
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <h3>Thanks for submitting the result, we are now awaiting your opponent to do the same</h3>
+        <p>Thanks for submitting the result, we are now awaiting your opponent to do the same.</p>
     </div>";
 }
 
@@ -716,7 +716,7 @@ static string openCupTemplate(string API_URL, int currentOpenCupId) {
         <h3>Cup #{currentOpenCupId} is open for registration</h3>
         <div class=""centre"" id=""register"">
 
-            <button
+            <button id=""register_button""
             hx-get=""{API_URL}/register""
             hx-target=""#register""
             hx-swap=""innerHTML""
