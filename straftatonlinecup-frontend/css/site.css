@@ -116,10 +116,10 @@ a:hover, a:visited, a:link, a:active {
 /* HOME PAGE */
 
 #more_cups_container {
-  width: 80%;
+  width: 54%;
   height: 10rem;
   margin-top: 2rem;
-  background-color: var(--background-colour);
+  background-color: var(--second-colour);
   border: 2px solid;
   border-color: var(--main-colour);
   border-radius: 7px;
