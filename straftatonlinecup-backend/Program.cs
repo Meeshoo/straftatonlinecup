@@ -140,7 +140,7 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
 
         await context.Response.WriteAsync(profileTemplate(steamNickname, avatarUrl, wincount));
     } else {
-        await context.Response.WriteAsync("You are nobody");
+        await context.Response.WriteAsync("<p>You are nobody</p>");
     }
 
 });
