@@ -748,7 +748,7 @@ static string absentUserTemplate(string API_URL) {
             style=""background-color: darkorchid;""
             hx-get=""{API_URL}/submitmatchresult?result=null&skip=true""
             hx-target=""#match""
-            hx-swap=""outerHTML"">Skip Match
+            hx-swap=""outerHTML"">Advance
         </button> 
     </div>
     ";
