@@ -27,11 +27,19 @@
       </div>
     </div>
 
-    <div class="centre" id="bracket"
+    <div class="centre" id="match_wrapper"
       hx-get="http://localhost:8000/match"
       hx-request='{"credentials": true}' 
-      hx-target="#bracket"
+      hx-target="#match_wrapper"
       hx-swap="outerHTML"
+      hx-trigger="load">
+    </div>
+
+    <div class="centre" id="absent_player_wrapper"
+      hx-get="http://localhost:8000/playerabsent"
+      hx-request='{"credentials": true}' 
+      hx-target="#absent_player_wrapper"
+      hx-swap="innerHTML"
       hx-trigger="load">
     </div>
 

@@ -117,8 +117,8 @@ app.MapGet("/debug", async (context) => {
     string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
     string? steamNickname = user.Identity.Name;
 
-    var remoteIp = context.Connection.RemoteIpAddress;
-    await context.Response.WriteAsync(remoteIp.ToString());
+    // var remoteIp = context.Connection.RemoteIpAddress;
+    // await context.Response.WriteAsync(remoteIp.ToString());
 
     if (user.Identity.IsAuthenticated) {
         await context.Response.WriteAsync($"Welcome, {steamNickname}! Your Steam ID is {steamId}.");
@@ -159,7 +159,7 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
 
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
     } else {
-        await context.Response.WriteAsync("No cups, ever");
+        await context.Response.WriteAsync("<p>The first cup will open soon</p>");
     }
 
 });
@@ -219,10 +219,6 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
 
 // TODO: Limit endpoint to localhost
 app.MapGet("/createnewcup", (HttpContext context, IDbConnection database) => {
-
-    var remoteIp = context.Connection.RemoteIpAddress;
-
-    Console.WriteLine(remoteIp);
 
     string dateOfCup = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd");
 
@@ -384,8 +380,27 @@ app.MapGet("/resultverification", ([FromQuery(Name = "result")] string result, H
     return resultConfirmationTemplate(API_URL, result);
 });
 
+app.MapGet("/playerabsent", (HttpContext context, IDbConnection database) => {
+    
+    string? steamId = context.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+    string matchCreationTime = database.Query<string>($"SELECT [datetime_created] FROM [matches] WHERE (status = \"pending\") AND ((player_one_steamid = {steamId}) OR (player_two_steamid = {steamId}))").FirstOrDefault("none");
+
+    // TODO: Make this less ugly/better
+    if (matchCreationTime != "none") {
+        DateTime now = DateTime.UtcNow;
+        DateTime matchCreationDateTime = DateTime.Parse(matchCreationTime);
+        if (now > matchCreationDateTime.AddMinutes(30)) {
+             return absentUserTemplate(API_URL);
+        } else {
+            return "";
+        }
+    } else {
+        return "";
+    }
+});
+
 // TODO: Do this in a better way
-app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, HttpContext context, IDbConnection database) => {
+app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, [FromQuery(Name = "skip")] bool skip, HttpContext context, IDbConnection database) => {
 
     bool userIsPlayerOne;
     string? steamId = context.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
@@ -399,11 +414,29 @@ app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, Ht
         userIsPlayerOne = true;
     }
 
+    if (skip) {
+        string matchCreationTime = database.Query<string>($"SELECT [datetime_created] FROM [matches] WHERE uuid = \"{matchuuid}\"").First();
+        DateTime now = DateTime.UtcNow;
+        DateTime matchCreationDateTime = DateTime.Parse(matchCreationTime);
+        if (now > matchCreationDateTime.AddMinutes(30)) {
+            // DO THINGS HERE
+            if (userIsPlayerOne) {
+                database.Execute($"UPDATE matches SET player_one_declared_result = \'winner\' WHERE UUID = \'{matchuuid}\'");
+                database.Execute($"UPDATE matches SET player_two_declared_result = \'loser\' WHERE UUID = \'{matchuuid}\'");
+            } else {
+                database.Execute($"UPDATE matches SET player_one_declared_result = \'loser\' WHERE UUID = \'{matchuuid}\'");
+                database.Execute($"UPDATE matches SET player_two_declared_result = \'winner\' WHERE UUID = \'{matchuuid}\'");
+            }
+        } else {
+            return "nt";
+        }
+    }
+
     // TODO: Get score from user form query string and add to DB
     
-    if (userIsPlayerOne) {
+    if (userIsPlayerOne && !skip) {
         database.Execute($"UPDATE matches SET player_one_declared_result = \'{result}\' WHERE UUID = \'{matchuuid}\'");
-    } else {
+    } else if (!userIsPlayerOne && !skip) {
         database.Execute($"UPDATE matches SET player_two_declared_result = \'{result}\' WHERE UUID = \'{matchuuid}\'");
     }
 
@@ -499,7 +532,7 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
     
 
     Guid uuid = Guid.NewGuid();
-    string date = DateTime.Today.ToString("yyyy-MM-dd");
+    string datetime_created = DateTime.UtcNow.ToString();
     string winner;
     string status;
     RandomWord randomword = new();
@@ -517,7 +550,7 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
 
     Match match = new() {
         uuid = uuid,
-        date = date,
+        datetime_created = datetime_created,
         cup_id = currentCupId,
         match_number = matchNumber,
         status = status,
@@ -530,10 +563,10 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
         shared_word = randomword.getRandomWord()
     };
 
-    database.Execute("INSERT INTO [matches] VALUES(@uuid, @date, @cup_id, @match_number, @status, @player_one_steamid, @player_two_steamid, @winner_steamid, @player_one_declared_result, @player_two_declared_result, @score, @shared_word)", new
+    database.Execute("INSERT INTO [matches] VALUES(@uuid, @datetime_created, @cup_id, @match_number, @status, @player_one_steamid, @player_two_steamid, @winner_steamid, @player_one_declared_result, @player_two_declared_result, @score, @shared_word)", new
     {
         match.uuid,
-        match.date,
+        match.datetime_created,
         match.cup_id,
         match.match_number,
         match.status,
@@ -555,7 +588,7 @@ static string steamIdToNickname(string steamId, IDbConnection database) {
     } else if (steamId == "FORFEIT" || steamId == "NO_OPPONENT") {
         return "No Opponent";
     } else {
-    return database.Query<string>($"SELECT [nickname] FROM [players] WHERE steamid = \'{steamId}\'").First();
+    return database.Query<string>($"SELECT [nickname] FROM [players] WHERE steamid = \'{steamId}\'").FirstOrDefault("Person McMan");
     }
 }
 
@@ -697,7 +730,7 @@ static string resultConfirmationTemplate(string API_URL, string declaredResult) 
         <p>You are about to declare yourself as the {declaredResult}, is this correct?</p>
         <button 
             style=""background-color: lightskyblue;""
-            hx-get=""{API_URL}/submitmatchresult?result={declaredResult}""
+            hx-get=""{API_URL}/submitmatchresult?result={declaredResult}&skip=false""
             hx-target=""#match""
             hx-swap=""outerHTML"">Yes
         </button> 
@@ -706,6 +739,20 @@ static string resultConfirmationTemplate(string API_URL, string declaredResult) 
             hx-get=""{API_URL}/match""
             hx-target=""#match""
             hx-swap=""outerHTML"">Back
+        </button> 
+    </div>
+    ";
+}
+
+static string absentUserTemplate(string API_URL) {
+    return @$"
+    <div class=""centre"" id=""absent_user_ui"">
+        <p>It has been 30 minutes with no result submissions. If your opponent didn't show up click below to proceed:</p>
+        <button 
+            style=""background-color: darkorchid;""
+            hx-get=""{API_URL}/submitmatchresult?result=null&skip=true""
+            hx-target=""#match""
+            hx-swap=""outerHTML"">Skip Match
         </button> 
     </div>
     ";
@@ -846,7 +893,7 @@ app.Run();
 
 public struct Match { 
     public Guid uuid;
-    public string date;
+    public string datetime_created;
     public int cup_id;
     public int match_number;
     public string status;
@@ -858,8 +905,3 @@ public struct Match {
     public string score;
     public string shared_word;
 }
-
-// TABLES I WILL NEED WITH WHAT DATA
-// Players - SteamID, nickname, steam avatar, wincount
-// Matches - UUID, date, cup_id, status(pending, complete) playerOneSteamId, playerTwoSteamID, winner(blank atm), score
-// Cups - ID, date, number of players, winner
