@@ -158,19 +158,15 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
         List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
 
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
-    } else {
+    } else if (currentCupStatus == "complete") {
+        await context.Response.WriteAsync("<p>There is currently no cup open for registration</p>");
+    }else {
         await context.Response.WriteAsync("<p>The first cup will open soon</p>");
     }
 
 });
 
 app.MapGet("/getpreviouscup", async (HttpContext context, IDbConnection database) => {
-
-    int currentOpenCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
-    if (currentOpenCupId == -1) {
-        await context.Response.WriteAsync("");
-        return;
-    }
 
     int completeCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 1").FirstOrDefault(-1);
 
