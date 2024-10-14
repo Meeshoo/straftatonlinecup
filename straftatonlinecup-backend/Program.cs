@@ -136,9 +136,13 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
 
     if (user.Identity.IsAuthenticated) {
         string avatarUrl = database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault("img/no_avatar.jpg");
-        int wincount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE winner_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int tournament_wincount = database.Query<string>($"SELECT [id] from [cups] WHERE winner_steamid = {steamId}").Count();
+        int match_wincount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE winner_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int match_playcount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE player_one_steamid = {steamId} OR player_two_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int match_losscount = match_playcount - match_wincount;
+        double match_winpercentage = (double)match_wincount / (double)match_playcount * 100;
 
-        await context.Response.WriteAsync(profileTemplate(steamNickname, avatarUrl, wincount));
+        await context.Response.WriteAsync(profileTemplate(steamNickname, avatarUrl, tournament_wincount, match_playcount, match_wincount, match_losscount, match_winpercentage));
     } else {
         await context.Response.WriteAsync("<p>You are nobody</p>");
     }
@@ -617,12 +621,16 @@ static List<string> getPlayersInBracket(int cupId, int bracketSize, IDbConnectio
         return playersInBracket;
 }
 
-static string profileTemplate(string profileName, string avatarUrl, int wincount) {
+static string profileTemplate(string profileName, string avatarUrl, int tournament_wincount, int match_playcount, int match_wincount, int match_losscount, double match_winpercentage) {
     return @$"
     <div class=""centre"">
         <h3>{profileName}</h3>
         <img src=""{avatarUrl}"">
-        <p>Match wins: {wincount}</p>
+        <p>Tournament wins: {tournament_wincount}</p>
+        <p>Matches played: {match_playcount}</p>
+        <p>Match wins: {match_wincount}</p>
+        <p>Match losses: {match_losscount}</p>
+        <p>Match win percentage: {match_winpercentage:0.##}%</p>
     </div>";
 }
 
