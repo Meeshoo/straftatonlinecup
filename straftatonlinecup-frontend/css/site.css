@@ -129,6 +129,32 @@ a:hover, a:visited, a:link, a:active {
   align-content: center;
 }
 
+#current_cup_container {
+  width: 40%;
+  background-color: var(--second-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
+  border-radius: 0.2rem;
+  vertical-align: middle;
+  align-content: center;
+  margin: auto;
+}
+
+#open_cup_players_list {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+}
+
+.player_profile {
+  margin: 1rem;
+}
+
+.profile_image {
+  width: 184px;
+}
+
 #more_cups_container {
   width: 40%;
   height: 10rem;

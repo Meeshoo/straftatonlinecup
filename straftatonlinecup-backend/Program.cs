@@ -155,9 +155,10 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
 
     if (currentCupStatus == "open") {
         int currentOpenCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") ORDER BY id DESC LIMIT 1").First();
-        await context.Response.WriteAsync(openCupTemplate(API_URL, currentOpenCupId));
+        IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentOpenCupId})");
+        int numberOfRegisteredPlayers = registeredPlayers.Count();
+        await context.Response.WriteAsync(openCupTemplate(database, API_URL, currentOpenCupId, registeredPlayers, numberOfRegisteredPlayers));
     } else if (currentCupStatus == "ongoing") {
-        
         int currentOngoingCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"ongoing\") ORDER BY id DESC LIMIT 1").First();
         List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
 
@@ -513,6 +514,36 @@ app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, [F
     return noMatchTemplate(API_URL);
 });
 
+// app.MapGet("/registertestplayers", (IDbConnection database) => {
+//     List<string> testPlayers = [
+//     "76561198023456789",
+//     "76561197987654321",
+//     "76561198034567890",
+//     "76561197998765432",
+//     "76561198045678901",
+//     "76561198056789012",
+//     "76561198067890123",
+//     "76561197976543210",
+//     "76561198078901234",
+//     "76561197965432109",
+//     "76561198089012345",
+//     "76561197954321098",
+//     "76561198090123456",
+//     "76561198001234567",
+//     "76561198012345679"
+//     ];
+
+//     int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
+//     foreach (var testPlayer in testPlayers) {
+//     database.Execute("INSERT INTO [cup_player_lists] VALUES(@cup_id, @player_steamid)", new
+//     {
+//         cup_id = currentCupId,
+//         player_steamid = testPlayer
+//     });
+//     }
+//     return "Test players added";
+// });
+
 app.MapGet("/reportplayer", (IDbConnection database) => {
     // Notify me somehow of the steamid of the reporter and the reportee and I can manually investigate and ban them if needed
 });
@@ -762,8 +793,11 @@ static string absentUserTemplate(string API_URL) {
     ";
 }
 
-static string openCupTemplate(string API_URL, int currentOpenCupId) {
-    return @$"
+static string openCupTemplate(IDbConnection database, string API_URL, int currentOpenCupId, IEnumerable<string> registeredPlayers, int numberOfRegisteredPlayers) {
+    
+    string response = "";
+    response +=  @$"
+        <div id=""current_cup_container"">
         <h3>Cup #{currentOpenCupId} is open for registration</h3>
         <div class=""centre"" id=""register"">
 
@@ -777,6 +811,21 @@ static string openCupTemplate(string API_URL, int currentOpenCupId) {
 
         </div>
     ";
+    if (numberOfRegisteredPlayers != 0){
+        response += @"
+        <p>Registered Players:</p>
+        <div class=""centre"" id=""open_cup_players_list"">
+        ";
+        foreach (var player in registeredPlayers) {
+            response += @$"
+            <div class=""centre player_profile"">
+                <img class=""centre profile_image"" src=""{steamIdToAvatar(player, database)}"">
+                <p class=""centre profile_name"">{steamIdToNickname(player, database)}</p>
+            </div>";
+        }
+    }
+    response += "</div></div>";
+    return response;
 }
 
 static string bracketTemplate(List<string> playersInBracket, string bracketTitle, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
