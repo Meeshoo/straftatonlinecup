@@ -164,7 +164,7 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
 
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
     } else if (currentCupStatus == "complete") {
-        await context.Response.WriteAsync("<p>There is currently no cup open for registration</p>");
+        await context.Response.WriteAsync("<p>The next cup opens for registration at 12:00 (midday) UTC on Thursday</p>");
     }else {
         await context.Response.WriteAsync("<p>The first cup will open soon</p>");
     }
@@ -221,7 +221,7 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
 // TODO: Limit endpoint to localhost
 app.MapGet("/createnewcup", (HttpContext context, IDbConnection database) => {
 
-    string dateOfCup = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd");
+    string dateOfCup = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd");
 
     int openCup = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\" OR status = \"ongoing\") LIMIT 1").FirstOrDefault(-1);
 
@@ -683,7 +683,8 @@ static string noMatchTemplate(string API_URL) {
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <p>You currently have no match to play. This page will update once a match is available, no need to refresh.</p>
+        <p>You currently have no match to play.</p><br>
+        <p>If you are registered for a tournament your match will show up here once the tournament starts at 15:00 UTC, no need to refresh the page.</p>
     </div>";
 }
 
