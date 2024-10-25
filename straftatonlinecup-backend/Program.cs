@@ -357,7 +357,7 @@ app.MapGet("/getlobbyid", async (HttpContext context, IDbConnection database) =>
     string lobbyId = database.Query<string>($"SELECT [lobby_id] FROM [matches] WHERE (status = \"pending\" AND player_two_steamid = {steamId})").FirstOrDefault("none");
 
     if (lobbyId == "none" || lobbyId == "" || lobbyId == null) {
-        await context.Response.WriteAsync("<span class=\"loader\"></span>");
+        await context.Response.WriteAsync("<span id=\"lobbyid\" class=\"loader\"></span>");
     } else {
         await context.Response.WriteAsync($"<p id=\"lobbyid\">{lobbyId}</p>");
     }
