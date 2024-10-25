@@ -111,7 +111,7 @@ app.MapGet("/headerprofile", (HttpContext context, IDbConnection database) => {
         string avatarUrl = database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault("img/no_avatar.jpg");
         return headerProfileTemplate(steamNickname, avatarUrl);
     } else {
-        return $"<a href=\"{API_URL}/login\"><img style=\"margin-top: 12%;\" src=\"img/SteamSignin.png\"></a>";
+        return $"<a style=\"float: right; margin-right: 1rem;\" href=\"{API_URL}/login\"><img style=\"margin-top: 1rem;\" src=\"img/SteamSignin.png\"></a>";
     }
 });
 
