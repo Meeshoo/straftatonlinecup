@@ -357,7 +357,7 @@ app.MapGet("/getlobbyid", async (HttpContext context, IDbConnection database) =>
     string lobbyId = database.Query<string>($"SELECT [lobby_id] FROM [matches] WHERE (status = \"pending\" AND player_two_steamid = {steamId})").FirstOrDefault("none");
 
     if (lobbyId == "none" || lobbyId == "" || lobbyId == null) {
-        await context.Response.WriteAsync("<span id=\"lobbyid\" class=\"loader\"></span>");
+        await context.Response.WriteAsync("<span class=\"loader\"></span>");
     } else {
         await context.Response.WriteAsync($"<p id=\"lobbyid\">{lobbyId}</p>");
     }
@@ -850,8 +850,8 @@ static string openMatchClientTemplate(string API_URL, string uuid, string oppone
         <div id=""lobbyid_wrapper""
             hx-get=""{API_URL}/getlobbyid""
             hx-trigger=""load, every 5s""
-            hx-target=""#lobbyid""
-            hx-swap=""outerHTML"">
+            hx-target=""#lobbyid_wrapper""
+            hx-swap=""innerHTML"">
             <div id=""lobbyid""></div>
         </div>
         <br>
