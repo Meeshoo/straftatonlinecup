@@ -46,6 +46,18 @@ h3 {
   color: var(--main-colour);
 }
 
+input[type=text] {
+  background-color: var(--second-colour);
+  color: var(--main-colour);
+  padding: 0.5rem;
+  border: solid 1px var(--main-colour);
+  border-radius: 2px;
+}
+
+marquee {
+  width: 24rem;
+}
+
 a:hover, a:visited, a:link, a:active {
     text-decoration: none;
 }
@@ -64,17 +76,32 @@ a:hover, a:visited, a:link, a:active {
   background-color: var(--background-colour);
 }
 
+#sitename_wrapper {
+  width: 20%;
+  flex: 1;
+}
+
 #site_name {
   font-family: 'Robot';
   text-decoration: none;
   margin-left: 1.5rem;
 }
 
+#header_buttons_wrapper {
+  align-content: center;
+  flex: 1;
+  margin: auto;
+}
+
 #header_buttons {
-  margin-left: 10rem;
+  width: 100%;
+  margin: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .header_button {
+  width: 90px;
   font-family: 'Robot';
   font-size: 18px;
   margin: 1rem;
@@ -85,17 +112,28 @@ a:hover, a:visited, a:link, a:active {
   color: var(--main-colour);
   background-color: var(--background-colour);
   text-decoration: none;
-  align-content: center;
-  float: left;
+  justify-content: center;
+  text-align: center;
 }
 
 #header_login {
+  flex: 1;
   height: 100%;
   margin-top: 0.4rem;
   margin-left: auto;
-  margin-right: 2rem;
   float: right;
   text-decoration: none;
+}
+
+#header_profile_wrapper {
+  width: fit-content;
+  margin-left: auto;
+  float: right;
+}
+
+#header_profile {
+  width: fit-content;
+  margin-right: 1rem;
 }
 
 #header_profile_name {
@@ -164,6 +202,60 @@ a:hover, a:visited, a:link, a:active {
   border-color: var(--main-colour);
   border-radius: 0.2rem;
   vertical-align: middle;
+  align-content: center;
+}
+
+/* MATCH */
+
+#match_wrapper {
+  margin-top: 5rem;
+}
+
+#pre_match {
+  width: 30%;
+  margin-top:5rem;
+  padding: 2rem;
+  background-color: var(--second-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
+  border-radius: 0.2rem;
+  vertical-align: middle;
+  align-content: center;
+}
+
+#check_in_button {
+  font-family: 'Robot';
+  font-size: 18px;
+  margin: 1rem;
+  padding: 0.5rem;
+  border: 2px outset buttonborder;
+  border-radius: 3px;
+  border-color: var(--main-colour);
+  color: var(--main-colour);
+  background-color: var(--background-colour);
+  text-decoration: none;
+  align-content: center;
+}
+
+#lobbyid {
+  width: fit-content;
+  margin: auto;
+  background-color: var(--second-colour);
+  padding: 1rem;
+  border: solid 1px var(--main-colour);
+}
+
+#lobbyid_submit_button {
+  font-family: 'Robot';
+  font-size: 14px;
+  margin: 1rem;
+  padding: 0.5rem;
+  border: 2px outset buttonborder;
+  border-radius: 3px;
+  border-color: var(--main-colour);
+  color: var(--main-colour);
+  background-color: var(--background-colour);
+  text-decoration: none;
   align-content: center;
 }
 
@@ -350,3 +442,39 @@ a:hover, a:visited, a:link, a:active {
     display: none;
   }
   /*# sourceMappingURL=playoff-table.css.map */
+
+  /* LOADING SPINNER */
+
+  .loader {
+    width: 48px;
+    height: 48px;
+    display: inline-block;
+    position: relative;
+  }
+  .loader::after,
+  .loader::before {
+    content: '';  
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--main-colour);
+    position: absolute;
+    left: 0;
+    top: 0;
+    animation: animloader 2s linear infinite;
+  }
+  .loader::after {
+    animation-delay: 1s;
+  }
+  
+  @keyframes animloader {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }

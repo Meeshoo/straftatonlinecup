@@ -6,7 +6,6 @@ using System.Data;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 string steamApiKey = "PutSteamKeyHerePlease";
 string API_URL = "ApiUrlGoesHerePlease";
@@ -16,6 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors();
+// builder.Services.AddAntiforgery(options => {
+//     options.FormFieldName = "lobbyid";
+//     options.HeaderName = "X-CSRF-TOKEN";
+//     options.SuppressXFrameOptionsHeader = false;
+// });
 builder.Services.AddScoped<IDbConnection>(_ => new SqliteConnection(builder.Configuration.GetConnectionString("Database")));
 builder.Services.AddAuthentication(options => {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -327,6 +331,73 @@ app.MapGet("/generatebracket", (IDbConnection database) => {
         return $"Bracket generated :)\n";
 });
 
+app.MapPost("/setlobbyid", async ([FromForm] string lobbyid, HttpContext context, IDbConnection database) => {
+
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+
+    string uuid = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE (status = \"pending\" AND player_one_steamid = {steamId})").FirstOrDefault("none");
+
+    if (uuid == "none") {
+        await context.Response.WriteAsync("No game for you to set the lobby id of");
+    } else if (lobbyid.All(char.IsLetter)) {
+        await context.Response.WriteAsync("Lobby ID cannot contain letters ;)");
+    } else {
+        database.Execute($"UPDATE matches SET lobby_id = \'{lobbyid}\' WHERE UUID = \'{uuid}\'");
+        await context.Response.WriteAsync("Lobby ID sent! Wait for opponent to join.");
+    }
+
+}).DisableAntiforgery();
+
+app.MapGet("/getlobbyid", async (HttpContext context, IDbConnection database) => {
+
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+
+    string lobbyId = database.Query<string>($"SELECT [lobby_id] FROM [matches] WHERE (status = \"pending\" AND player_two_steamid = {steamId})").FirstOrDefault("none");
+
+    if (lobbyId == "none" || lobbyId == "" || lobbyId == null) {
+        await context.Response.WriteAsync("<span class=\"loader\"></span>");
+    } else {
+        await context.Response.WriteAsync($"<p id=\"lobbyid\">{lobbyId}</p>");
+    }
+
+
+});
+
+app.MapGet("/prematch", async (HttpContext context, IDbConnection database) => {
+
+    bool userIsPlayerOne;
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+
+    if (!user.Identity.IsAuthenticated) {
+        await context.Response.WriteAsync("<h3 class=\"centre\">You are not logged in. Please log in via steam to view your matches</h3>");
+    } else {
+
+        string uuid = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE (status = \"pending\" OR status= \"waiting_p1\" OR status= \"waiting_p2\") AND (player_one_steamid = {steamId})").FirstOrDefault("none");
+
+        if (uuid == "none") {
+            userIsPlayerOne = false;
+            uuid = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE (status = \"pending\" OR status= \"waiting_p1\" OR status= \"waiting_p2\") AND (player_two_steamid = {steamId})").FirstOrDefault("none");
+        } else {
+            userIsPlayerOne = true;
+        }
+
+        string matchStatus = database.Query<string>($"SELECT [status] FROM [matches] WHERE (uuid = \"{uuid}\")").FirstOrDefault("none");
+
+        if (uuid == "none") {
+            await context.Response.WriteAsync(noMatchTemplate(API_URL));
+        } else if (userIsPlayerOne && matchStatus == "waiting_p2") {
+            await context.Response.WriteAsync(waitingForMatchResultTemplate(API_URL));
+        } else if (!userIsPlayerOne && matchStatus == "waiting_p1") {
+            await context.Response.WriteAsync(waitingForMatchResultTemplate(API_URL));
+        } else {
+            await context.Response.WriteAsync(preMatchTemplate(API_URL));
+        }
+    }
+});
+
 app.MapGet("/match", async (HttpContext context, IDbConnection database) => {
 
     bool userIsPlayerOne;
@@ -591,10 +662,11 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
         player_two_declared_result = "",
         winner_steamid = winner,
         score = "",
-        shared_word = randomword.getRandomWord()
+        shared_word = randomword.getRandomWord(),
+        lobby_id = ""
     };
 
-    database.Execute("INSERT INTO [matches] VALUES(@uuid, @datetime_created, @cup_id, @match_number, @status, @player_one_steamid, @player_two_steamid, @winner_steamid, @player_one_declared_result, @player_two_declared_result, @score, @shared_word)", new
+    database.Execute("INSERT INTO [matches] VALUES(@uuid, @datetime_created, @cup_id, @match_number, @status, @player_one_steamid, @player_two_steamid, @winner_steamid, @player_one_declared_result, @player_two_declared_result, @score, @shared_word, @lobby_id)", new
     {
         match.uuid,
         match.datetime_created,
@@ -607,7 +679,8 @@ static bool generateMatch(int matchNumber, string playerOneSteamID, string playe
         match.player_two_declared_result,
         match.winner_steamid,
         match.score,
-        match.shared_word
+        match.shared_word,
+        match.lobby_id
     });
 
     return true;
@@ -667,12 +740,30 @@ static string profileTemplate(string profileName, string avatarUrl, int tourname
 
 static string headerProfileTemplate(string profileName, string avatarUrl) {
     return @$"
-    <a class=""centre"" href=profile.html>
+    <a id=""header_profile_wrapper"" class=""centre"" href=profile.html>
     <div id=""header_profile"">
         <img class=""centre"" id=""header_profile_image"" src=""{avatarUrl}"">
         <p class=""centre"" id=""header_profile_name"">{profileName}</p>
     </div>
     </a>";
+}
+
+static string preMatchTemplate(string API_URL) {
+    return @$"
+    <div class=""centre"" id=""pre_match"">
+        <p>Your match is ready!</p><br>
+        <marquee behavior=""alternate"" scrollamount""7"">
+            <h2>Read the instructions on the next page</h2>
+        </marquee><br>
+        <button id=""check_in_button""
+            hx-get=""{API_URL}/match""
+            hx-request='{"credentials": true}' 
+            hx-target=""#match_wrapper""
+            hx-swap=""innerHTML""
+            hx-trigger=""click"">
+                Okay
+        </button>
+    </div>";
 }
 
 static string noMatchTemplate(string API_URL) {
@@ -683,8 +774,13 @@ static string noMatchTemplate(string API_URL) {
       hx-target=""#match""
       hx-swap=""outerHTML""
       hx-trigger=""every 10s"">
-        <p>You currently have no match to play.</p><br>
-        <p>If you are registered for a tournament your match will show up here once the tournament starts at 15:00 UTC, no need to refresh the page.</p>
+        <p>You currently have no match to play</p>
+        <br>
+        <p>If you are registered for a tournament your first match will show up as soon as the tournament starts</p>
+        <br>
+        <p>Further matches will appear here when they are ready</p>
+        <br>
+        <p>No need to refresh the page</p>
     </div>";
 }
 
@@ -702,18 +798,23 @@ static string waitingForMatchResultTemplate(string API_URL) {
 
 static string openMatchHostTemplate(string API_URL, string uuid, string opponentName, string opponentAvatar, string sharedword) {
     return @$"
-    <div class=""centre"" id=""match""
-      hx-get=""{API_URL}/match""
-      hx-request='{"credentials": true}' 
-      hx-target=""#match""
-      hx-swap=""outerHTML""
-      hx-trigger=""every 10s"">
+    <div class=""centre"" id=""match"">
         <p>Your opponent is:</p>
         <img src=""{opponentAvatar}"">
-        <h3>{opponentName}</h3>
-        <p>Please host a public lobby and wait for {opponentName} to join. You'll know it is actually them as they will type the codeword '{sharedword}' in the chat.</p>
+        <h3>{opponentName}</h3> <br>
+        <p>Please host a private lobby.</p>
         <br>
-        <p>If you are unsure of the game settings to choose for the lobby you can find them <a href=""info.html"">here</a>.</p>
+        <p>Game rules are <a href=""info.html"">here</a>.</p>
+        <br>
+        <p>Copy and paste the lobby ID here:</p>
+        <br>
+        <form hx-post=""{API_URL}/setlobbyid"" hx-target=""#setlobbyid_result"" hx-swap=""innerHTML"">
+        <div>
+            <input name=""lobbyid"" type=""text"" placeholder=""Lobby ID"">
+        </div>
+        <button id=""lobbyid_submit_button"" class=""btn primary"">Send to opponent</button>
+        </form>
+        <p id=""setlobbyid_result""></p>
         <br>
         <div id=""result_submission"">
             <p>Once complete, submit the result below:</p>
@@ -728,21 +829,31 @@ static string openMatchHostTemplate(string API_URL, string uuid, string opponent
             hx-target=""#result_submission""
             hx-swap=""innerHTML"">Loss</button> 
         </div>
+        <div class=""centre"" id=""absent_player_wrapper""
+            hx-get=""{API_URL}/playerabsent""
+            hx-request='{"credentials": true}' 
+            hx-target=""#absent_player_wrapper""
+            hx-swap=""innerHTML""
+            hx-trigger=""load"">
+        </div>
     </div>";
 }
 
 static string openMatchClientTemplate(string API_URL, string uuid, string opponentName, string opponentAvatar, string sharedword) {
     return @$"
-    <div class=""centre"" id=""match""
-      hx-get=""{API_URL}/match""
-      hx-request='{"credentials": true}' 
-      hx-target=""#match""
-      hx-swap=""outerHTML""
-      hx-trigger=""every 10s"">
+    <div class=""centre"" id=""match"">
         <p>Your opponent is:</p>
         <img src=""{opponentAvatar}"">
-        <p>{opponentName}</p>
-        <p> {opponentName} will host a public lobby. Please join it and type the codeword '{sharedword}' to confirm to them that you are the right person.</p>
+        <h3>{opponentName}</h3> <br>
+        <p> {opponentName} will host a private lobby.</p><br>
+        <p>The lobby ID will show below when ready:</p>
+        <div id=""lobbyid_wrapper""
+            hx-get=""{API_URL}/getlobbyid""
+            hx-trigger=""load, every 5s""
+            hx-target=""#lobbyid""
+            hx-swap=""outerHTML"">
+            <div id=""lobbyid""></div>
+        </div>
         <br>
         <div id=""result_submission"">
             <p>Once complete, submit the result below:</p>
@@ -756,6 +867,13 @@ static string openMatchClientTemplate(string API_URL, string uuid, string oppone
             hx-get=""{API_URL}/resultverification?result=loser""
             hx-target=""#result_submission""
             hx-swap=""innerHTML"">Loss</button> 
+        </div>
+        <div class=""centre"" id=""absent_player_wrapper""
+            hx-get=""{API_URL}/playerabsent""
+            hx-request='{"credentials": true}' 
+            hx-target=""#absent_player_wrapper""
+            hx-swap=""innerHTML""
+            hx-trigger=""load"">
         </div>
     </div>";
 }
@@ -958,4 +1076,5 @@ public struct Match {
     public string winner_steamid;
     public string score;
     public string shared_word;
+    public string lobby_id;
 }
