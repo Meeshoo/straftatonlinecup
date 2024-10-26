@@ -153,6 +153,18 @@ a:hover, a:visited, a:link, a:active {
 
 /* HOME PAGE */
 
+#next_cup_wrapper {
+  width: 40%;
+  background-color: var(--second-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
+  border-radius: 0.2rem;
+  vertical-align: middle;
+  align-content: center;
+  margin: auto;
+  padding: 1rem;
+}
+
 #register_button {
   font-family: 'Robot';
   font-size: 18px;

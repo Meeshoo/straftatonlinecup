@@ -6,6 +6,7 @@ using System.Data;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 string steamApiKey = "PutSteamKeyHerePlease";
 string API_URL = "ApiUrlGoesHerePlease";
@@ -168,7 +169,12 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
 
         await context.Response.WriteAsync(bracketTemplate(playersInBracket, $"Cup #{currentOngoingCupId} - Ongoing", "ongoing", "", "", database));
     } else if (currentCupStatus == "complete") {
-        await context.Response.WriteAsync("<p>The next cup opens for registration at 12:00 (midday) UTC on Thursday</p>");
+        DateTime today = DateTime.Today;
+        int daysUntilNextThursday = ((int) DayOfWeek.Thursday - (int) today.DayOfWeek + 7) % 7;
+        DateTime nextThursday = today.AddDays(daysUntilNextThursday);
+        nextThursday = nextThursday.AddHours(12);
+        string datetimeOfCupOpening = nextThursday.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+        await context.Response.WriteAsync(noCupTemplate(API_URL, datetimeOfCupOpening));
     }else {
         await context.Response.WriteAsync("<p>The first cup will open soon</p>");
     }
@@ -909,6 +915,39 @@ static string absentUserTemplate(string API_URL) {
             hx-swap=""outerHTML"">Advance
         </button> 
     </div>
+    ";
+}
+
+static string noCupTemplate(string API_URL, string datetime) {
+    return @$"
+        <div id=""next_cup_wrapper"">
+        <p>The next cup opens for registration in:</p>
+        <h3 id=""countdown""></h3>
+        <p>[12:00 (midday) UTC on Thursday]</p>
+        <script>
+            var countDownDate = new Date(""{datetime}"").getTime();
+
+            var x = setInterval(function() {{
+
+            var now = new Date().getTime();
+
+            var distance = countDownDate - now;
+
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById(""countdown"").innerHTML = days + ""d "" + hours + ""h ""
+            + minutes + ""m "" + seconds + ""s "";
+
+            if (distance < 0) {{
+                clearInterval(x);
+                document.getElementById(""countdown"").innerHTML = ""NOW!"";
+            }}
+            }}, 1000);
+        </script>
+        </div>
     ";
 }
 
