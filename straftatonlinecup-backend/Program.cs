@@ -162,7 +162,10 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
         int currentOpenCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") ORDER BY id DESC LIMIT 1").First();
         IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentOpenCupId})");
         int numberOfRegisteredPlayers = registeredPlayers.Count();
-        await context.Response.WriteAsync(openCupTemplate(database, API_URL, currentOpenCupId, registeredPlayers, numberOfRegisteredPlayers));
+        DateTime cupStartDateTime = DateTime.Parse(database.Query<string>($"SELECT [date] FROM [cups] WHERE (id = {currentOpenCupId}) LIMIT 1").First());
+        cupStartDateTime = cupStartDateTime.AddHours(15);
+        string cupStartTime = cupStartDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+        await context.Response.WriteAsync(openCupTemplate(database, API_URL, currentOpenCupId, registeredPlayers, numberOfRegisteredPlayers, cupStartTime));
     } else if (currentCupStatus == "ongoing") {
         int currentOngoingCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"ongoing\") ORDER BY id DESC LIMIT 1").First();
         List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
@@ -951,12 +954,37 @@ static string noCupTemplate(string API_URL, string datetime) {
     ";
 }
 
-static string openCupTemplate(IDbConnection database, string API_URL, int currentOpenCupId, IEnumerable<string> registeredPlayers, int numberOfRegisteredPlayers) {
+static string openCupTemplate(IDbConnection database, string API_URL, int currentOpenCupId, IEnumerable<string> registeredPlayers, int numberOfRegisteredPlayers, string datetime) {
     
     string response = "";
     response +=  @$"
         <div id=""current_cup_container"">
         <h3>Cup #{currentOpenCupId} is open for registration</h3>
+        <p>Cup begins in:</p>
+        <h3 id=""countdown""></h3>
+        <script>
+            var countDownDate = new Date(""{datetime}"").getTime();
+
+            var x = setInterval(function() {{
+
+            var now = new Date().getTime();
+
+            var distance = countDownDate - now;
+
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById(""countdown"").innerHTML = days + ""d "" + hours + ""h ""
+            + minutes + ""m "" + seconds + ""s "";
+
+            if (distance < 0) {{
+                clearInterval(x);
+                document.getElementById(""countdown"").innerHTML = ""NOW!"";
+            }}
+            }}, 1000);
+        </script>
         <div class=""centre"" id=""register"">
 
             <button id=""register_button""
@@ -982,7 +1010,7 @@ static string openCupTemplate(IDbConnection database, string API_URL, int curren
             </div>";
         }
     }
-    response += "</div></div>";
+    response += @"</div></div>";
     return response;
 }
 

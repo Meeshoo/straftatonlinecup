@@ -162,7 +162,8 @@ a:hover, a:visited, a:link, a:active {
   vertical-align: middle;
   align-content: center;
   margin: auto;
-  padding: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 #register_button {
