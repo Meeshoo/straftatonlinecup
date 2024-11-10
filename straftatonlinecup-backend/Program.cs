@@ -470,7 +470,7 @@ app.MapGet("/playerabsent", (HttpContext context, IDbConnection database) => {
     if (matchCreationTime != "none") {
         DateTime now = DateTime.UtcNow;
         DateTime matchCreationDateTime = DateTime.Parse(matchCreationTime);
-        if (now > matchCreationDateTime.AddMinutes(30)) {
+        if (now > matchCreationDateTime.AddMinutes(20)) {
              return absentUserTemplate(API_URL);
         } else {
             return "";
@@ -499,7 +499,7 @@ app.MapGet("/submitmatchresult", ([FromQuery(Name = "result")] string result, [F
         string matchCreationTime = database.Query<string>($"SELECT [datetime_created] FROM [matches] WHERE uuid = \"{matchuuid}\"").First();
         DateTime now = DateTime.UtcNow;
         DateTime matchCreationDateTime = DateTime.Parse(matchCreationTime);
-        if (now > matchCreationDateTime.AddMinutes(30)) {
+        if (now > matchCreationDateTime.AddMinutes(20)) {
             // DO THINGS HERE
             if (userIsPlayerOne) {
                 database.Execute($"UPDATE matches SET player_one_declared_result = \'winner\' WHERE UUID = \'{matchuuid}\'");
@@ -910,7 +910,7 @@ static string resultConfirmationTemplate(string API_URL, string declaredResult) 
 static string absentUserTemplate(string API_URL) {
     return @$"
     <div class=""centre"" id=""absent_user_ui"">
-        <p>It has been 30 minutes with no result submissions. If your opponent didn't show up click below to proceed:</p>
+        <p>It has been 20 minutes with no result submissions. If your opponent didn't show up click below to proceed:</p>
         <button 
             style=""background-color: darkorchid;""
             hx-get=""{API_URL}/submitmatchresult?result=null&skip=true""
