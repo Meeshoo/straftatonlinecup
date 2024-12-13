@@ -711,7 +711,7 @@ static string steamIdToAvatar(string steamId, IDbConnection database) {
     } else if (steamId == "FORFEIT" || steamId == "NO_OPPONENT") {
         return "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
     } else {
-    return database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE steamid = \'{steamId}\'").First();
+    return database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE steamid = \'{steamId}\'").FirstOrDefault("img/no_avatar.jpg");
     }
 }
 
