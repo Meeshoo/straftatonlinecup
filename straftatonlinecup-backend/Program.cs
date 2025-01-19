@@ -208,7 +208,7 @@ app.MapGet("/getpreviouscup", async (HttpContext context, IDbConnection database
 
 app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection database) => {
 
-    IEnumerable<int> completeCupIds = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC LIMIT 5").DefaultIfEmpty(-1);
+    IEnumerable<int> completeCupIds = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"complete\") ORDER BY id DESC").DefaultIfEmpty(-1);
 
     string response = "";
 
