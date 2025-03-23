@@ -231,9 +231,15 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
 
 });
 
-// TODO: Limit endpoint to localhost
 app.MapGet("/createnewcup", (HttpContext context, IDbConnection database) => {
 
+    var remoteIp = context.Connection.RemoteIpAddress;
+
+    if (!IPAddress.IsLoopback(remoteIp))
+    {
+        return "Only accessible from localhost!";
+    }
+    
     string dateOfCup = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd");
 
     int openCup = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\" OR status = \"ongoing\") LIMIT 1").FirstOrDefault(-1);
@@ -292,9 +298,15 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
     }
 });
 
-// TODO: Limit endpoint to localhost
 app.MapGet("/generatebracket", (IDbConnection database) => {
 
+        var remoteIp = context.Connection.RemoteIpAddress;
+
+        if (!IPAddress.IsLoopback(remoteIp))
+        {
+            return "Only accessible from localhost!";
+        }
+    
         int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
 
         List<string> listOfRegisteredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = \"{currentCupId}\")").ToList();
