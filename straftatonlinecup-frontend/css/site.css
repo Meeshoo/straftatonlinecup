@@ -151,6 +151,28 @@ a:hover, a:visited, a:link, a:active {
     vertical-align: middle;
 }
 
+/* DISCORD WIDGET */
+#discord_widget {
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 10rem;
+  margin: 2rem;
+  padding: 0.2rem;
+  border-radius: 0.2rem;
+  border: solid 2px;
+  border-color: var(--main-colour);
+  background-color: var(--second-colour);
+}
+
+#discord_widget > img {
+  padding: 0;
+  width: 60px;
+  display: block;
+  margin: 0 auto 1rem auto;
+  
+}
+
 /* HOME PAGE */
 
 #next_cup_wrapper {
