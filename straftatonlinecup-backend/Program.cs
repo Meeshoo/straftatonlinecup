@@ -159,6 +159,9 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
 
 app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database) => {
 
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+
     string currentCupStatus = database.Query<string>($"SELECT [status] FROM [cups] ORDER BY id DESC LIMIT 1").FirstOrDefault("");
 
     if (currentCupStatus == "open") {
@@ -168,7 +171,7 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
         DateTime cupStartDateTime = DateTime.Parse(database.Query<string>($"SELECT [date] FROM [cups] WHERE (id = {currentOpenCupId}) LIMIT 1").First());
         cupStartDateTime = cupStartDateTime.AddHours(15);
         string cupStartTime = cupStartDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
-        await context.Response.WriteAsync(openCupTemplate(database, API_URL, currentOpenCupId, registeredPlayers, numberOfRegisteredPlayers, cupStartTime));
+        await context.Response.WriteAsync(openCupTemplate(database, API_URL, currentOpenCupId, registeredPlayers, numberOfRegisteredPlayers, cupStartTime, steamId));
     } else if (currentCupStatus == "ongoing") {
         int currentOngoingCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"ongoing\") ORDER BY id DESC LIMIT 1").First();
         List<string> playersInBracket = getPlayersInBracket(currentOngoingCupId, bracketSize, database);
@@ -298,6 +301,23 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
         } else {
             return "<p>You are already registered friend</p>";
         } 
+    }
+});
+
+app.MapGet("/unregister", (HttpContext context, IDbConnection database) => {
+
+    var user = context.User;
+
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+    int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
+
+    IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
+
+    if (registeredPlayers.Contains(steamId)) {
+        database.Execute($"DELETE FROM cup_player_lists WHERE player_steamid = {steamId}");
+        return "<p>You have been removed :)</p>";
+    } else {
+        return "<p>You aren't registered yet, no idea how you got that button to click tbh</p>";
     }
 });
 
@@ -963,7 +983,7 @@ static string noCupTemplate(string API_URL, string datetime) {
     ";
 }
 
-static string openCupTemplate(IDbConnection database, string API_URL, int currentOpenCupId, IEnumerable<string> registeredPlayers, int numberOfRegisteredPlayers, string datetime) {
+static string openCupTemplate(IDbConnection database, string API_URL, int currentOpenCupId, IEnumerable<string> registeredPlayers, int numberOfRegisteredPlayers, string datetime, string steamId) {
     
     string response = "";
     response +=  @$"
@@ -994,6 +1014,9 @@ static string openCupTemplate(IDbConnection database, string API_URL, int curren
             }}
             }}, 1000);
         </script>
+    ";
+    if (!registeredPlayers.Contains(steamId)) {
+        response += @$"
         <div class=""centre"" id=""register"">
 
             <button id=""register_button""
@@ -1005,7 +1028,23 @@ static string openCupTemplate(IDbConnection database, string API_URL, int curren
             </button>
 
         </div>
-    ";
+        ";
+    } else {
+        response += @$"
+        <div class=""centre"" id=""register"">
+
+            <button 
+            style=""background-color: red;""
+            hx-get=""{API_URL}/unregister""
+            hx-target=""#register""
+            hx-swap=""innerHTML""
+            hx-trigger=""click"">
+            Unregister
+            </button>
+
+        </div>
+        ";        
+    }
     if (numberOfRegisteredPlayers != 0){
         response += @"
         <p>Registered Players:</p>
