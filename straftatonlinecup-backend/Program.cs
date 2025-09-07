@@ -88,12 +88,13 @@ app.MapGet("/postlogin", async (HttpContext context, IDbConnection database) => 
     playerAvatarUrl = (string)steamData["response"]["players"][0]["avatarfull"];
 
     if (existingUser == "none") {
-        database.Execute("INSERT INTO [players] VALUES(@steamid, @nickname, @avatar_url)", new
-        {
-            steamid = steamId,
-            nickname = steamNickname,
-            avatar_url = playerAvatarUrl
-        });
+    database.Execute("INSERT INTO [players] VALUES(@steamid, @nickname, @avatar_url, @is_banned)", new
+    {
+        steamid = steamId,
+        nickname = steamNickname,
+        avatar_url = playerAvatarUrl,
+        is_banned = 0
+});
     } else {
         database.Execute($"UPDATE players SET nickname = \'{steamNickname}\', avatar_url = \'{playerAvatarUrl}\' WHERE steamid = \"{steamId}\"");
     }
@@ -265,8 +266,14 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
     string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
     int currentCupId = database.Query<int>($"SELECT [id] FROM [cups] WHERE (status = \"open\") LIMIT 1").FirstOrDefault(-1);
 
+    int isPlayerBanned = database.Query<int>($"SELECT [is_banned] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault(0);
+
+    if (isPlayerBanned == 1) {
+        return "<p>Please log in to register</p>";
+    }
+
     IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
-    int numberOfRegisteredPlayers = registeredPlayers.Count();
+    int numberOfRegisteredPlayers = registeredPlayers.Count();   
 
     if ( numberOfRegisteredPlayers >= bracketSize) {
         return "<p>Bracket is full, sorry, return next week but earlier</p>";
