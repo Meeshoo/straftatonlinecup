@@ -143,7 +143,9 @@ app.MapGet("/profile", async (HttpContext context, IDbConnection database) => {
         string avatarUrl = database.Query<string>($"SELECT [avatar_url] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault("img/no_avatar.jpg");
         int tournament_wincount = database.Query<string>($"SELECT [id] from [cups] WHERE winner_steamid = {steamId}").Count();
         int match_wincount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE winner_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
-        int match_playcount = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE player_one_steamid = {steamId} OR player_two_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int match_playcount_as_player_one = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE player_one_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int match_playcount_as_player_two = database.Query<string>($"SELECT [uuid] FROM [matches] WHERE player_two_steamid = {steamId} AND NOT player_one_steamid = \"NO_OPPONENT\" AND NOT player_two_steamid = \"NO_OPPONENT\" AND NOT player_one_steamid = \"FORFEIT\" AND NOT player_two_steamid = \"FORFEIT\"").Count();
+        int match_playcount = match_playcount_as_player_one + match_playcount_as_player_two;
         int match_losscount = match_playcount - match_wincount;
         double match_winpercentage = (double)match_wincount / (double)match_playcount * 100;
 
