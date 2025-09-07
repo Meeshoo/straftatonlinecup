@@ -273,7 +273,7 @@ app.MapGet("/register", (HttpContext context, IDbConnection database) => {
     }
 
     IEnumerable<string> registeredPlayers = database.Query<string>($"SELECT [player_steamid] FROM [cup_player_lists] WHERE (cup_id = {currentCupId})");
-    int numberOfRegisteredPlayers = registeredPlayers.Count();   
+    int numberOfRegisteredPlayers = registeredPlayers.Count();
 
     if ( numberOfRegisteredPlayers >= bracketSize) {
         return "<p>Bracket is full, sorry, return next week but earlier</p>";
