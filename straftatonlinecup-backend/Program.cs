@@ -1219,11 +1219,11 @@ static string adminPageTemplate(string API_URL, IEnumerable<MatchPlayers> pendin
         <h3>Current open matches:</h3> 
         <br>
         <br>
-        <table>
+        <table id=""admin_match_list_table"">
             <tr>
                 <td></td>
-                <td>Player One</td>
-                <td>Player Two</td>
+                <td><p>Player One</p></td>
+                <td><p>Player Two</p></td>
                 <td></td>
             </tr>";
 
@@ -1240,8 +1240,8 @@ static string adminPageTemplate(string API_URL, IEnumerable<MatchPlayers> pendin
                     Advance Player One
                 </button>
                 </td>
-                <td>{steamIdToNickname(match.player_one_steamid, database)}</td>
-                <td>{steamIdToNickname(match.player_two_steamid, database)}</td>
+                <td><p>{steamIdToNickname(match.player_one_steamid, database)}</p></td>
+                <td><p>{steamIdToNickname(match.player_two_steamid, database)}</p></td>
                 <td>
                     <button 
                         style=""background-color: aqua;""

@@ -503,3 +503,13 @@ a:hover, a:visited, a:link, a:active {
         border-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.75) rgba(255, 255, 255, 0.15);
   }
 }
+
+/* ADMIN AREA */
+#admin_match_list {
+  justify-items: center;
+}
+
+#admin_match_list_table {
+  border: 1px;
+  border-color: var(--background-colour);
+}
