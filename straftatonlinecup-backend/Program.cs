@@ -150,7 +150,7 @@ app.MapGet("/getadminpage", async (HttpContext context, IDbConnection database) 
             await context.Response.WriteAsync($"<p>Begone peon!</p>");
         }
     } else {
-        await context.Response.WriteAsync("<p>You ain't even logged in mate/p>");
+        await context.Response.WriteAsync("<p>You ain't even logged in mate</p>");
     }
 
 });
