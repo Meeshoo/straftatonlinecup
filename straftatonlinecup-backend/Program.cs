@@ -146,7 +146,7 @@ app.MapGet("/getadminpage", async (HttpContext context, IDbConnection database) 
         int is_admin = database.Query<int>($"SELECT [is_admin] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault(0);
 
         if (is_admin == 1) {
-            IEnumerable<Match> pendingMatches = database.Query<Match>("SELECT * FROM [matches] WHERE status = \"complete\""); // CHANGE THIS TO PENDING FOR REAL
+            IEnumerable<MatchPlayers> pendingMatches = database.Query<MatchPlayers>("SELECT [player_one_steamid],[player_two_steamid] FROM [matches] WHERE status = \"complete\""); // CHANGE THIS TO PENDING FOR REAL
             await context.Response.WriteAsync(adminPageTemplate(API_URL, pendingMatches, database));
         } else {
             await context.Response.WriteAsync($"<p>Begone peon!</p>");
@@ -1210,7 +1210,7 @@ if (cupStatus == "complete") {
 return response;
 }
 
-static string adminPageTemplate(string API_URL, IEnumerable<Match> pendingMatches, IDbConnection database) {
+static string adminPageTemplate(string API_URL, IEnumerable<MatchPlayers> pendingMatches, IDbConnection database) {
 
     string response = @$"
     <h1>Admin Area - Proceed with caution!</h1>
@@ -1218,40 +1218,46 @@ static string adminPageTemplate(string API_URL, IEnumerable<Match> pendingMatche
         <p id=""admin_action_result""></p>
         <h3>Current open matches:</h3> 
         <br>
-        <br>";
+        <br>
+        <table>
+            <tr>
+                <td></td>
+                <td>Player One</td>
+                <td>Player Two</td>
+                <td></td>
+            </tr>";
 
     foreach (var match in pendingMatches) {
     response += @$"
-        <button 
-            style=""background-color: pink;""
-            hx-get=""{API_URL}/SOMEENPOINT""
-            hx-target=""#admin_action_result""
-            hx-swap=""innerHTML""
-            hx-trigger=""click"">
-            Advance Player One
-        </button>
-        <table>
             <tr>
-                <td>Player One</td>
-                <td>Player Two</td>
-            </tr>
-            <tr>
+                <td>
+                <button 
+                    style=""background-color: pink;""
+                    hx-get=""{API_URL}/SOMEENPOINT""
+                    hx-target=""#admin_action_result""
+                    hx-swap=""innerHTML""
+                    hx-trigger=""click"">
+                    Advance Player One
+                </button>
+                </td>
                 <td>{steamIdToNickname(match.player_one_steamid, database)}</td>
                 <td>{steamIdToNickname(match.player_two_steamid, database)}</td>
+                <td>
+                    <button 
+                        style=""background-color: aqua;""
+                        hx-get=""{API_URL}/SOMEENPOINT""
+                        hx-target=""#admin_action_result""
+                        hx-swap=""innerHTML""
+                        hx-trigger=""click"">
+                        Advance Player Two
+                    </button>
+                </td>
             </tr>
-        <\table>
-        <button 
-            style=""background-color: aqua;""
-            hx-get=""{API_URL}/SOMEENPOINT""
-            hx-target=""#admin_action_result""
-            hx-swap=""innerHTML""
-            hx-trigger=""click"">
-            Advance Player One
-        </button>
         ";
     }
 
     response += @$"
+    </table>
     </div>";
 
     return response;
@@ -1273,4 +1279,9 @@ public struct Match {
     public string score;
     public string shared_word;
     public string lobby_id;
+}
+
+public struct MatchPlayers { 
+    public string player_one_steamid;
+    public string player_two_steamid;
 }
