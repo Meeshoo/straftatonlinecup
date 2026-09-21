@@ -88,12 +88,13 @@ app.MapGet("/postlogin", async (HttpContext context, IDbConnection database) => 
     playerAvatarUrl = (string)steamData["response"]["players"][0]["avatarfull"];
 
     if (existingUser == "none") {
-    database.Execute("INSERT INTO [players] VALUES(@steamid, @nickname, @avatar_url, @is_banned)", new
+    database.Execute("INSERT INTO [players] VALUES(@steamid, @nickname, @avatar_url, @is_banned, @is_admin)", new
     {
         steamid = steamId,
         nickname = steamNickname,
         avatar_url = playerAvatarUrl,
-        is_banned = 0
+        is_banned = 0,
+        is_admin = 0
 });
     } else {
         database.Execute($"UPDATE players SET nickname = \'{steamNickname}\', avatar_url = \'{playerAvatarUrl}\' WHERE steamid = \"{steamId}\"");
@@ -130,6 +131,26 @@ app.MapGet("/debug", async (context) => {
         await context.Response.WriteAsync($"Welcome, {steamNickname}! Your Steam ID is {steamId}.");
     } else {
         await context.Response.WriteAsync("You are not yet logged tf in");
+    }
+
+});
+
+app.MapGet("/getadminpage", async (HttpContext context, IDbConnection database) => {
+
+    var user = context.User;
+    string? steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value.Split("/")[5];
+    string? steamNickname = user.Identity.Name;
+
+    if (user.Identity.IsAuthenticated) {
+        int is_admin = database.Query<int>($"SELECT [is_admin] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault(0);
+
+        if (is_admin == 1) {
+            await context.Response.WriteAsync($"<p>Welcome {steamNickname}, you are an admin :)</p>");
+        } else {
+            await context.Response.WriteAsync($"<p>Begone peon!</p>");
+        }
+    } else {
+        await context.Response.WriteAsync("<p>You ain't even logged in mate/p>");
     }
 
 });
@@ -229,6 +250,9 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
             List<string> playersInBracket = getPlayersInBracket(cupId, bracketSize, database);
 
             string bracketTitle = $"Cup #{cupId} - {completeCupDate}";
+            if (cupId == 22) {
+                response += "<h2>Match history below this point is incorrect due admin incompetence</h2>";
+            }
             response += bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database);
         }
         await context.Response.WriteAsync(response);
@@ -1064,7 +1088,10 @@ static string openCupTemplate(IDbConnection database, string API_URL, int curren
 }
 
 static string bracketTemplate(List<string> playersInBracket, string bracketTitle, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
-    
+
+    // Truncate names longer than 15 or so I think
+    //Truncate(playersInBracket.ElementAt(0), 14, true);
+
     string response = @$"
     <div class=""centre bracket_wrapper"">
     <h3>{bracketTitle}</h3>
