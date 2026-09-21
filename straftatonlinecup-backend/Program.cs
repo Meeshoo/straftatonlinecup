@@ -229,6 +229,9 @@ app.MapGet("/getpastfivecups", async (HttpContext context, IDbConnection databas
             List<string> playersInBracket = getPlayersInBracket(cupId, bracketSize, database);
 
             string bracketTitle = $"Cup #{cupId} - {completeCupDate}";
+            if (cupId == 22) {
+                response += "<h2>Match history below this point is incorrect due admin incompetence</h2>";
+            }
             response += bracketTemplate(playersInBracket, bracketTitle, "complete", cupWinnerName, cupWinnerAvatarUrl, database);
         }
         await context.Response.WriteAsync(response);
@@ -1064,7 +1067,10 @@ static string openCupTemplate(IDbConnection database, string API_URL, int curren
 }
 
 static string bracketTemplate(List<string> playersInBracket, string bracketTitle, string cupStatus, string cupWinnerName, string cupWinnerAvatarUrl, IDbConnection database) {
-    
+
+    // Truncate names longer than 15 or so I think
+    //Truncate(playersInBracket.ElementAt(0), 14, true);
+
     string response = @$"
     <div class=""centre bracket_wrapper"">
     <h3>{bracketTitle}</h3>
