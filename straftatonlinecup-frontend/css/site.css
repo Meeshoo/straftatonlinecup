@@ -510,6 +510,10 @@ a:hover, a:visited, a:link, a:active {
 }
 
 #admin_match_list_table {
-  border: 1px;
-  border-color: var(--background-colour);
+  border: 1px solid var(--main-colour);
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid var(--main-colour);
 }
