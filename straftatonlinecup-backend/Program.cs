@@ -355,6 +355,10 @@ app.MapGet("/generatebracket", (IDbConnection database) => {
 
         int numberOfPlayers = listOfRegisteredPlayers.Count;
 
+        if (numberOfPlayers < 2) {
+            return "Not enough players, cancelling";
+        }
+
         if (numberOfPlayers < 16) {
             int numberOfPlayersToAdd = 16 - numberOfPlayers;
             for (int i = 0; i < numberOfPlayersToAdd; i++) {
