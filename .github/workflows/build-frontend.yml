@@ -49,6 +49,7 @@ jobs:
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/profile.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/postlogin.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/info.html
+          sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/controlroom.html
 
       - name: Bodge in Discord invite
         run: |
