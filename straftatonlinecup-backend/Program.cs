@@ -146,7 +146,7 @@ app.MapGet("/getadminpage", async (HttpContext context, IDbConnection database) 
         int is_admin = database.Query<int>($"SELECT [is_admin] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault(0);
 
         if (is_admin == 1) {
-            IEnumerable<Match> pendingMatches = database.Query<Match>("SELECT [player_one_steamid],[player_two_steamid] FROM [players] WHERE (status = \"complete\")"); // CHANGE THIS TO PENDING FOR REAL
+            IEnumerable<Match> pendingMatches = database.Query<Match>("SELECT * FROM [matches] WHERE status = \"complete\""); // CHANGE THIS TO PENDING FOR REAL
             await context.Response.WriteAsync(adminPageTemplate(API_URL, pendingMatches, database));
         } else {
             await context.Response.WriteAsync($"<p>Begone peon!</p>");
