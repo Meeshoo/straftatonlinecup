@@ -7,6 +7,7 @@ using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 string steamApiKey = "PutSteamKeyHerePlease";
 string API_URL = "ApiUrlGoesHerePlease";
@@ -145,7 +146,8 @@ app.MapGet("/getadminpage", async (HttpContext context, IDbConnection database) 
         int is_admin = database.Query<int>($"SELECT [is_admin] FROM [players] WHERE (steamid = {steamId})").FirstOrDefault(0);
 
         if (is_admin == 1) {
-            await context.Response.WriteAsync($"<p>Welcome {steamNickname}, you are an admin :)</p>");
+            IEnumerable<Match> pendingMatches = database.Query<Match>("SELECT [player_one_steamid],[player_two_steamid] FROM [players] WHERE (status = \"complete\")"); // CHANGE THIS TO PENDING FOR REAL
+            await context.Response.WriteAsync(adminPageTemplate(API_URL, pendingMatches, database));
         } else {
             await context.Response.WriteAsync($"<p>Begone peon!</p>");
         }
@@ -1206,6 +1208,53 @@ if (cupStatus == "complete") {
 }
 
 return response;
+}
+
+static string adminPageTemplate(string API_URL, IEnumerable<Match> pendingMatches, IDbConnection database) {
+
+    string response = @$"
+    <h1>Admin Area - Proceed with caution!</h1>
+    <div class=""centre"" id=""admin_match_list"">
+        <p id=""admin_action_result""></p>
+        <h3>Current open matches:</h3> 
+        <br>
+        <br>";
+
+    foreach (var match in pendingMatches) {
+    response += @$"
+        <button 
+            style=""background-color: pink;""
+            hx-get=""{API_URL}/SOMEENPOINT""
+            hx-target=""#admin_action_result""
+            hx-swap=""innerHTML""
+            hx-trigger=""click"">
+            Advance Player One
+        </button>
+        <table>
+            <tr>
+                <td>Player One</td>
+                <td>Player Two</td>
+            </tr>
+            <tr>
+                <td>{steamIdToNickname(match.player_one_steamid, database)}</td>
+                <td>{steamIdToNickname(match.player_two_steamid, database)}</td>
+            </tr>
+        <\table>
+        <button 
+            style=""background-color: aqua;""
+            hx-get=""{API_URL}/SOMEENPOINT""
+            hx-target=""#admin_action_result""
+            hx-swap=""innerHTML""
+            hx-trigger=""click"">
+            Advance Player One
+        </button>
+        ";
+    }
+
+    response += @$"
+    </div>";
+
+    return response;
 }
 
 app.Run();
