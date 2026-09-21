@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="htmx-config" content='{"withCredentials": true}'>
+    <title>Straftat Weekly Cup</title>
+    <link rel="shortcut icon" type="image/png" href="img/favicon.png" />
+    <link rel="stylesheet" type="text/css" href="css/site.css" />
+    <script src="pkgs/htmx.min.js" defer></script>
+</head>
+  <body>
+
+    <div id="header"">
+      <a id="sitename_wrapper" href="/"><h1 id="site_name">STRAFTAT WEEKLY CUP</h1></a>
+      <div id="header_buttons_wrapper">
+        <div id="header_buttons">
+          <a href="match.html" class="header_button">Match</a>
+          <a href="cups.html" class="header_button">Past Cups</a>
+          <a href="info.html" class="header_button">FAQ</a>
+        </div>
+      </div>
+      <div id="header_login"
+        hx-get="http://localhost:8000/headerprofile"
+        hx-request='{"credentials": true}' 
+        hx-target="#header_login"
+        hx-swap="innerHTML"
+        hx-trigger="load">
+      </div>
+    </div>
+
+    <div class="centre" id="admin_container"
+      hx-get="http://localhost:8000/getadminpage"
+      hx-request='{"credentials": true}' 
+      hx-target="#admin_container"
+      hx-swap="innerHTML"
+      hx-trigger="load">
+    </div>
+
+  </body>
+</html>
