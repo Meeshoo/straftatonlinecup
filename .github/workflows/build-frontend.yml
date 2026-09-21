@@ -49,6 +49,14 @@ jobs:
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/profile.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/postlogin.html
           sed -i 's%http\:\/\/localhost\:8000%${{ secrets.API_URL }}%g' straftatonlinecup-frontend/info.html
+
+      - name: Bodge in Discord invite
+        run: |
+          sed -i 's%InviteCodeHere%${{ secrets.DISCORD_INVITE_CODE }}%g' straftatonlinecup-frontend/index.html
+          sed -i 's%InviteCodeHere%${{ secrets.DISCORD_INVITE_CODE }}%g' straftatonlinecup-frontend/cups.html
+          sed -i 's%InviteCodeHere%${{ secrets.DISCORD_INVITE_CODE }}%g' straftatonlinecup-frontend/match.html
+          sed -i 's%InviteCodeHere%${{ secrets.DISCORD_INVITE_CODE }}%g' straftatonlinecup-frontend/profile.html
+          sed -i 's%InviteCodeHere%${{ secrets.DISCORD_INVITE_CODE }}%g' straftatonlinecup-frontend/info.html
       
       - name: Packer build
         run: cd .build && sudo packer build straftatonlinecup-frontend.pkr.hcl
