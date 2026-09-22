@@ -504,6 +504,47 @@ a:hover, a:visited, a:link, a:active {
   }
 }
 
+/* INFO */
+#info {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+}
+
+#game_rules {
+  background-color: var(--second-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
+  border-radius: 0.2rem;
+  vertical-align: middle;
+  align-content: center;
+  width: 35%;
+  padding: 15px;
+  margin-left: 1rem;
+  margin-right: auto;
+}
+
+#faq {
+  background-color: var(--second-colour);
+  border: 2px solid;
+  border-color: var(--main-colour);
+  border-radius: 0.2rem;
+  vertical-align: middle;
+  align-content: center;
+  width: 35%;
+  padding: 15px;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.info_heading {
+  text-decoration: underline;
+}
+
+.info_link {
+  color: cornflowerblue;
+}
+
 /* ADMIN AREA */
 #admin_match_list {
   justify-items: center;
