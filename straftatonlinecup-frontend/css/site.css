@@ -516,12 +516,12 @@ a:hover, a:visited, a:link, a:active {
   border: 2px solid;
   border-color: var(--main-colour);
   border-radius: 0.2rem;
-  vertical-align: middle;
   align-content: center;
   width: 35%;
   padding: 15px;
   margin-left: 1rem;
   margin-right: auto;
+  align-content: start;
 }
 
 #faq {
@@ -529,12 +529,12 @@ a:hover, a:visited, a:link, a:active {
   border: 2px solid;
   border-color: var(--main-colour);
   border-radius: 0.2rem;
-  vertical-align: middle;
   align-content: center;
   width: 35%;
   padding: 15px;
   margin-left: auto;
   margin-right: 1rem;
+  align-content: start;
 }
 
 .info_heading {
