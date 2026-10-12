@@ -209,7 +209,7 @@ app.MapGet("/getcurrentcup", async (HttpContext context, IDbConnection database)
         string datetimeOfCupOpening = nextThursday.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
         await context.Response.WriteAsync(noCupTemplate(API_URL, datetimeOfCupOpening));
     }else {
-        await context.Response.WriteAsync("<p>The first cup will open soon</p>");
+        await context.Response.WriteAsync("<p>The next cup will open soon</p>");
     }
 
 });
